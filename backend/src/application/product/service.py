@@ -3,13 +3,12 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from domain.history import OperationEvent, OperationType
-from domain.product import Product
-
 from application.attachment.dto import AttachmentResponseDto
 from application.category.dto import CategoryResponseDto
 from application.event_bus import IEventBus
 from application.product.analytics_cache import IProductAnalyticsCache
+from domain.history import OperationEvent, OperationType
+from domain.product import Product
 
 from .dto import (
     ProductCreateDto,
@@ -41,9 +40,7 @@ class ProductService:
         self._event_bus = event_bus
         self._analytics_cache = analytics_cache
 
-    def create(
-        self, user_id: UUID, dto: ProductCreateDto
-    ) -> ProductResponseDto:
+    def create(self, user_id: UUID, dto: ProductCreateDto) -> ProductResponseDto:
         if not dto.name.strip():
             raise EmptyProductNameException()
         if dto.price < Decimal("0.00"):

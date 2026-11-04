@@ -163,9 +163,7 @@ def update_product(
     current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> ProductResponse:
-    product_dto = service.update(
-        current_user.id, product_id, request.to_dto()
-    )
+    product_dto = service.update(current_user.id, product_id, request.to_dto())
     return ProductResponse.from_dto(product_dto)
 
 
@@ -196,9 +194,7 @@ def reserve_stock(
     current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> ProductResponse:
-    product_dto = service.reserve_stock(
-        current_user.id, product_id, request.amount
-    )
+    product_dto = service.reserve_stock(current_user.id, product_id, request.amount)
     return ProductResponse.from_dto(product_dto)
 
 
@@ -215,7 +211,5 @@ def restore_stock(
     current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> ProductResponse:
-    product_dto = service.restore_stock(
-        current_user.id, product_id, request.amount
-    )
+    product_dto = service.restore_stock(current_user.id, product_id, request.amount)
     return ProductResponse.from_dto(product_dto)
