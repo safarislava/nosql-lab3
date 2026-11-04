@@ -1,11 +1,15 @@
 import builtins
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
+
+from domain.history import OperationEvent, OperationType
+from domain.product import Product
 
 from application.attachment.dto import AttachmentResponseDto
 from application.category.dto import CategoryResponseDto
+from application.event_bus import IEventBus
 from application.product.analytics_cache import IProductAnalyticsCache
-from domain.product import Product
 
 from .dto import (
     ProductCreateDto,
@@ -30,12 +34,16 @@ class ProductService:
     def __init__(
         self,
         product_repository: IProductRepository,
+        event_bus: IEventBus,
         analytics_cache: IProductAnalyticsCache | None = None,
     ) -> None:
         self._product_repository = product_repository
+        self._event_bus = event_bus
         self._analytics_cache = analytics_cache
 
-    def create(self, dto: ProductCreateDto) -> ProductResponseDto:
+    def create(
+        self, user_id: UUID, dto: ProductCreateDto
+    ) -> ProductResponseDto:
         if not dto.name.strip():
             raise EmptyProductNameException()
         if dto.price < Decimal("0.00"):
@@ -58,6 +66,20 @@ class ProductService:
         )
         cats = self._product_repository.get_categories(saved_product.id)
         atts = self._product_repository.get_attachments(saved_product.id)
+
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user_id,
+                action=OperationType.CREATE_PRODUCT,
+                target_id=saved_product.id,
+                details={
+                    "name": saved_product.name,
+                    "price": f"{saved_product.price:.2f}",
+                    "quantity": saved_product.quantity,
+                },
+            )
+        )
+
         return ProductResponseDto.from_domain(
             saved_product, categories=cats, attachments=atts
         )
@@ -113,7 +135,9 @@ class ProductService:
             limit=filter_dto.limit,
         )
 
-    def update(self, product_id: UUID, dto: ProductUpdateDto) -> ProductResponseDto:
+    def update(
+        self, user_id: UUID, product_id: UUID, dto: ProductUpdateDto
+    ) -> ProductResponseDto:
         product = self._product_repository.get_by_id(product_id)
         if product is None:
             raise ProductNotFoundException(product_id)
@@ -151,6 +175,21 @@ class ProductService:
             raise ProductNotFoundException(product_id)
         cats = self._product_repository.get_categories(saved_product.id)
         atts = self._product_repository.get_attachments(saved_product.id)
+
+        details: dict[str, Any] = {"name": saved_product.name}
+        if dto.price is not None:
+            details["price"] = f"{saved_product.price:.2f}"
+        if dto.quantity is not None:
+            details["quantity"] = saved_product.quantity
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user_id,
+                action=OperationType.UPDATE_PRODUCT,
+                target_id=saved_product.id,
+                details=details,
+            )
+        )
+
         return ProductResponseDto.from_domain(
             saved_product, categories=cats, attachments=atts
         )
@@ -226,12 +265,23 @@ class ProductService:
         attachments = [AttachmentResponseDto.from_domain(a) for a in atts]
         return sorted(attachments, key=lambda a: a.order)
 
-    def delete(self, product_id: UUID) -> bool:
+    def delete(self, user_id: UUID, product_id: UUID) -> bool:
         if not self._product_repository.delete(product_id):
             raise ProductNotFoundException(product_id)
+
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user_id,
+                action=OperationType.DELETE_PRODUCT,
+                target_id=product_id,
+            )
+        )
+
         return True
 
-    def reserve_stock(self, product_id: UUID, amount: int) -> ProductResponseDto:
+    def reserve_stock(
+        self, user_id: UUID, product_id: UUID, amount: int
+    ) -> ProductResponseDto:
         if amount <= 0:
             raise InvalidStockAmountException()
 
@@ -239,6 +289,17 @@ class ProductService:
             product_id, -amount
         )
         if updated_product is not None:
+            self._event_bus.publish(
+                OperationEvent(
+                    user_id=user_id,
+                    action=OperationType.RESERVE_STOCK,
+                    target_id=product_id,
+                    details={
+                        "amount": amount,
+                        "remaining_quantity": updated_product.quantity,
+                    },
+                )
+            )
             return ProductResponseDto.from_domain(updated_product)
 
         product = self._product_repository.get_by_id(product_id)
@@ -251,7 +312,9 @@ class ProductService:
             available=product.quantity,
         )
 
-    def restore_stock(self, product_id: UUID, amount: int) -> ProductResponseDto:
+    def restore_stock(
+        self, user_id: UUID, product_id: UUID, amount: int
+    ) -> ProductResponseDto:
         if amount <= 0:
             raise InvalidStockAmountException()
 
@@ -260,6 +323,18 @@ class ProductService:
         )
         if updated_product is None:
             raise ProductNotFoundException(product_id)
+
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user_id,
+                action=OperationType.RESTORE_STOCK,
+                target_id=product_id,
+                details={
+                    "amount": amount,
+                    "restored_quantity": updated_product.quantity,
+                },
+            )
+        )
 
         return ProductResponseDto.from_domain(updated_product)
 
