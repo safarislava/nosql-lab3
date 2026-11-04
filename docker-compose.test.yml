@@ -154,8 +154,8 @@ services:
       cassandra3-test:
         condition: service_healthy
     volumes:
-      - ./backend/scripts/init_cassandra.cql:/init_cassandra.cql:ro
-    entrypoint: ["cqlsh", "cassandra1-test", "-f", "/init_cassandra.cql"]
+      - ./backend/scripts/init_cassandra_test.cql:/init_cassandra_test.cql:ro
+    entrypoint: ["cqlsh", "cassandra1-test", "-f", "/init_cassandra_test.cql"]
     restart: "no"
 
 volumes:
