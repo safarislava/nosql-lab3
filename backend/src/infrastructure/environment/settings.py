@@ -55,6 +55,9 @@ class CassandraSettings(BaseModel):
     port: int
     keyspace: str
     consistency_level: str
+    bucket_seconds_type: int
+    bucket_seconds_entity: int
+    bucket_seconds_user: int
 
     @property
     def contact_points(self) -> list[str]:
