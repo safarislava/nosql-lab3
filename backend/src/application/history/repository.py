@@ -17,7 +17,6 @@ class IHistoryRepository(ABC):
     def get_user_events(
         self,
         user_id: UUID,
-        offset: int = 0,
         limit: int = 20,
         last_event_id: UUID | None = None,
     ) -> list[OperationEvent]:
@@ -41,8 +40,6 @@ class IHistoryRepository(ABC):
         self,
         entity_type: str,
         entity_id: UUID,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
         limit: int = 50,
         last_event_id: UUID | None = None,
     ) -> list[OperationEvent]:
