@@ -6,11 +6,12 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "bcrypt>=4.2.0",
+    "cassandra-driver>=3.29.0",
     "email-validator>=2.3.0",
     "fastapi==0.162.0",
     "httpx>=0.28.1",
     "psycopg-pool==3.3.3",
-    "psycopg[binary,pool]==3.3.7",
+    "psycopg[binary,pool]==3.3.8",
     "pydantic==2.14.2",
     "pydantic-settings==2.16.2",
     "pyjwt==2.15.1",
@@ -29,6 +30,10 @@ python_version = "3.13"
 mypy_path = "src"
 explicit_package_bases = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "cassandra.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]

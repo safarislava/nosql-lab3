@@ -31,22 +31,19 @@ class OperationEventResponseDto:
 class UserHistoryResponseDto:
     user_id: UUID
     events: list[OperationEventResponseDto]
-    offset: int
     limit: int
+    next_cursor: UUID | None = None
 
     @classmethod
     def from_domain(
         cls,
         history: UserHistory,
-        offset: int = 0,
         limit: int = 20,
     ) -> "UserHistoryResponseDto":
-        all_events = history.get_recent_events(limit=1000)
-        paginated = all_events[offset : offset + limit]
+        all_events = history.get_recent_events(limit=limit)
         return cls.from_events(
             user_id=history.user_id,
-            events=paginated,
-            offset=offset,
+            events=all_events,
             limit=limit,
         )
 
@@ -55,12 +52,58 @@ class UserHistoryResponseDto:
         cls,
         user_id: UUID,
         events: list[OperationEvent],
-        offset: int = 0,
         limit: int = 20,
     ) -> "UserHistoryResponseDto":
+        next_cursor = events[-1].id if len(events) == limit else None
         return cls(
             user_id=user_id,
             events=[OperationEventResponseDto.from_domain(e) for e in events],
-            offset=offset,
             limit=limit,
+            next_cursor=next_cursor,
+        )
+
+
+@dataclass(frozen=True)
+class ProductHistoryResponseDto:
+    product_id: UUID
+    events: list[OperationEventResponseDto]
+    limit: int
+    next_cursor: UUID | None = None
+
+    @classmethod
+    def from_events(
+        cls,
+        product_id: UUID,
+        events: list[OperationEvent],
+        limit: int = 20,
+    ) -> "ProductHistoryResponseDto":
+        next_cursor = events[-1].id if len(events) == limit else None
+        return cls(
+            product_id=product_id,
+            events=[OperationEventResponseDto.from_domain(e) for e in events],
+            limit=limit,
+            next_cursor=next_cursor,
+        )
+
+
+@dataclass(frozen=True)
+class OrderHistoryResponseDto:
+    order_id: UUID
+    events: list[OperationEventResponseDto]
+    limit: int
+    next_cursor: UUID | None = None
+
+    @classmethod
+    def from_events(
+        cls,
+        order_id: UUID,
+        events: list[OperationEvent],
+        limit: int = 20,
+    ) -> "OrderHistoryResponseDto":
+        next_cursor = events[-1].id if len(events) == limit else None
+        return cls(
+            order_id=order_id,
+            events=[OperationEventResponseDto.from_domain(e) for e in events],
+            limit=limit,
+            next_cursor=next_cursor,
         )

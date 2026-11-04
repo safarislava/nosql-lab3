@@ -154,10 +154,10 @@ def test_service_uses_cache_until_it_is_invalidated() -> None:
     riak = FakeRiak()
     cache = RiakProductAnalyticsCache(client=riak, ttl_seconds=60)  # type: ignore[arg-type]
     service = ProductService(
-        product_repository=repo,
+        product_repository=repo,  # type: ignore[arg-type]
         event_bus=InMemoryEventBus(),
         analytics_cache=cache,
-    )  # type: ignore[arg-type]
+    )
 
     assert service.average_changes_by_state() == stats
     assert service.average_changes_by_state() == stats
