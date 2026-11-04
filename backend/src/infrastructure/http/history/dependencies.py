@@ -9,17 +9,9 @@ from infrastructure.event_bus.dependencies import get_event_bus
 from infrastructure.persistence.composite.history_repository import (
     CompositeHistoryRepository,
 )
-from infrastructure.persistence.postgres.history_repository import (
-    PostgresHistoryRepository,
-)
 from infrastructure.persistence.riak.history_cache_repository import (
     RiakHistoryCacheRepository,
 )
-
-
-@cache
-def get_postgres_history_repository() -> PostgresHistoryRepository:
-    return PostgresHistoryRepository()
 
 
 @cache
@@ -30,7 +22,6 @@ def get_riak_history_cache_repository() -> RiakHistoryCacheRepository:
 @cache
 def get_history_repository() -> IHistoryRepository:
     return CompositeHistoryRepository(
-        postgres_repo=get_postgres_history_repository(),
         riak_repo=get_riak_history_cache_repository(),
     )
 

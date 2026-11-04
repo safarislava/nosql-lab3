@@ -121,9 +121,6 @@ from infrastructure.persistence.postgres.connection import (
     get_postgres_pool,
     init_db,
 )
-from infrastructure.persistence.postgres.history_repository import (
-    PostgresHistoryRepository,
-)
 from infrastructure.persistence.postgres.order_repository import (
     PostgresOrderRepository,
 )
@@ -315,9 +312,6 @@ class RepositoriesContainer:
     recovery_repo: RiakRecoveryTokenRepository = field(
         default_factory=RiakRecoveryTokenRepository
     )
-    postgres_history_repo: PostgresHistoryRepository = field(
-        default_factory=PostgresHistoryRepository
-    )
     riak_history_cache_repo: RiakHistoryCacheRepository = field(
         default_factory=RiakHistoryCacheRepository
     )
@@ -329,7 +323,6 @@ class RepositoriesContainer:
 
     def __post_init__(self) -> None:
         self.history_repo = CompositeHistoryRepository(
-            postgres_repo=self.postgres_history_repo,
             riak_repo=self.riak_history_cache_repo,
         )
 
