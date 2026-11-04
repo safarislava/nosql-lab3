@@ -50,12 +50,24 @@ class CouchDbSettings(BaseModel):
         return [self.node0_url, self.node1_url]
 
 
+class CassandraSettings(BaseModel):
+    hosts: str
+    port: int
+    keyspace: str
+    consistency_level: str
+
+    @property
+    def contact_points(self) -> list[str]:
+        return [h.strip() for h in self.hosts.split(",") if h.strip()]
+
+
 class Settings(BaseSettings):
     app_version: int
     riak: RiakSettings
     postgres: PostgresSettings
     auth: AuthSettings
     couchdb: CouchDbSettings
+    cassandra: CassandraSettings
 
     model_config = SettingsConfigDict(
         env_file=_ENV_FILE,

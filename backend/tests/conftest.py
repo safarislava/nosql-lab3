@@ -40,6 +40,12 @@ os.environ["COUCHDB__CATEGORIES_DB"] = os.getenv(
     "COUCHDB__CATEGORIES_DB", "categories_test"
 )
 os.environ["COUCHDB__TIMEOUT"] = "5.0"
+os.environ["CASSANDRA__HOSTS"] = os.getenv("CASSANDRA__HOSTS", "localhost")
+os.environ["CASSANDRA__PORT"] = os.getenv("CASSANDRA__PORT", "9042")
+os.environ["CASSANDRA__KEYSPACE"] = os.getenv("CASSANDRA__KEYSPACE", "store_test")
+os.environ["CASSANDRA__CONSISTENCY_LEVEL"] = os.getenv(
+    "CASSANDRA__CONSISTENCY_LEVEL", "QUORUM"
+)
 
 
 from application.auth.service import AuthService

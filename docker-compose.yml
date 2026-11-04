@@ -1,4 +1,4 @@
-name: nosql_lab2
+name: nosql_lab3
 
 services:
   postgres:
@@ -72,6 +72,96 @@ services:
       timeout: 3s
       retries: 20
 
+  cassandra1:
+    image: cassandra:5.0
+    container_name: cassandra1
+    hostname: cassandra1
+    environment:
+      CASSANDRA_CLUSTER_NAME: cluster
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_SEEDS: cassandra1
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra1-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 45s
+
+  cassandra2:
+    image: cassandra:5.0
+    container_name: cassandra2
+    hostname: cassandra2
+    environment:
+      CASSANDRA_CLUSTER_NAME: cluster
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_SEEDS: cassandra1
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    ports:
+      - "9043:9042"
+    volumes:
+      - cassandra2-data:/var/lib/cassandra
+    depends_on:
+      cassandra1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 45s
+
+  cassandra3:
+    image: cassandra:5.0
+    container_name: cassandra3
+    hostname: cassandra3
+    environment:
+      CASSANDRA_CLUSTER_NAME: cluster
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_SEEDS: cassandra1
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    ports:
+      - "9044:9042"
+    volumes:
+      - cassandra3-data:/var/lib/cassandra
+    depends_on:
+      cassandra2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 45s
+
+  cassandra-init:
+    image: cassandra:5.0
+    container_name: cassandra_init
+    depends_on:
+      cassandra1:
+        condition: service_healthy
+      cassandra2:
+        condition: service_healthy
+      cassandra3:
+        condition: service_healthy
+    volumes:
+      - ./backend/scripts/init_cassandra.cql:/init_cassandra.cql:ro
+    entrypoint: ["cqlsh", "cassandra1", "-f", "/init_cassandra.cql"]
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -91,6 +181,8 @@ services:
         condition: service_healthy
       couchdb2:
         condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
 
   frontend:
     build:
@@ -109,3 +201,6 @@ volumes:
   riak-data:
   couchdb1-data:
   couchdb2-data:
+  cassandra1-data:
+  cassandra2-data:
+  cassandra3-data:
