@@ -12,6 +12,7 @@ from application.product.dto import (
 )
 from application.product.service import ProductService
 from infrastructure.environment.settings import settings
+from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.couchdb.design_documents import (
     PRODUCT_CHANGES_BY_STATE_MAP_JS,
     ensure_product_analytics_view,
@@ -152,7 +153,11 @@ def test_service_uses_cache_until_it_is_invalidated() -> None:
     repo = FakeProductRepository(stats)
     riak = FakeRiak()
     cache = RiakProductAnalyticsCache(client=riak, ttl_seconds=60)  # type: ignore[arg-type]
-    service = ProductService(product_repository=repo, analytics_cache=cache)  # type: ignore[arg-type]
+    service = ProductService(
+        product_repository=repo,
+        event_bus=InMemoryEventBus(),
+        analytics_cache=cache,
+    )  # type: ignore[arg-type]
 
     assert service.average_changes_by_state() == stats
     assert service.average_changes_by_state() == stats

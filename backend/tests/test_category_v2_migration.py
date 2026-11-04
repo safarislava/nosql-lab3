@@ -962,6 +962,7 @@ def test_product_service_nested_categories_and_attachments() -> None:
     from application.product.service import ProductService
     from domain.attachment import AttachmentMetadata
     from domain.category import Category
+    from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
     from infrastructure.http.product.schemas import (
         CreateProductRequest,
         ProductAttachmentInput,
@@ -973,7 +974,8 @@ def test_product_service_nested_categories_and_attachments() -> None:
     mock_client = MockCouchDbClient()
     settings.app_version = 2
     repo = CouchDbProductRepository(client=mock_client)  # type: ignore[arg-type]
-    service = ProductService(product_repository=repo)
+    service = ProductService(product_repository=repo, event_bus=InMemoryEventBus())
+    admin_id = uuid4()
 
     # 1. Создание через DTO со вложенными данными
     cat1 = Category(name="Ноутбуки", slug="laptops")
@@ -988,7 +990,7 @@ def test_product_service_nested_categories_and_attachments() -> None:
         categories=[cat1],
         attachments=[att1],
     )
-    resp_dto = service.create(create_dto)
+    resp_dto = service.create(admin_id, create_dto)
     assert resp_dto.name == "MacBook Pro"
     assert len(resp_dto.categories) == 1
     assert resp_dto.categories[0].name == "Ноутбуки"
@@ -1025,7 +1027,7 @@ def test_product_service_nested_categories_and_attachments() -> None:
     assert len(req_dto.attachments) == 1
     assert req_dto.attachments[0].filename == "photo.png"
 
-    created_prod = service.create(req_dto)
+    created_prod = service.create(admin_id, req_dto)
     assert len(created_prod.categories) == 1
     assert created_prod.categories[0].name == "Ультрабуки"
     assert len(created_prod.attachments) == 1
@@ -1042,7 +1044,7 @@ def test_product_service_nested_categories_and_attachments() -> None:
         ],
     )
     update_dto = update_req.to_dto()
-    updated_prod = service.update(created_prod.id, update_dto)
+    updated_prod = service.update(admin_id, created_prod.id, update_dto)
     assert updated_prod.name == "Dell XPS 15"
     assert len(updated_prod.categories) == 1
     assert updated_prod.categories[0].name == "Премиум ноутбуки"

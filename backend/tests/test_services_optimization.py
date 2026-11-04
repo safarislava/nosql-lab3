@@ -23,7 +23,7 @@ class TestServicesHydration:
         student_user: User,
         sample_product: Product,
     ) -> None:
-        product_service = ProductService(repos.product_repo)
+        product_service = ProductService(repos.product_repo, repos.event_bus)
         cart_service = CartService(repos.cart_repo, product_service, repos.event_bus)
 
         # Создаем второй товар
@@ -73,7 +73,7 @@ class TestServicesHydration:
         student_user: User,
         sample_product: Product,
     ) -> None:
-        product_service = ProductService(repos.product_repo)
+        product_service = ProductService(repos.product_repo, repos.event_bus)
         cart_service = CartService(repos.cart_repo, product_service, repos.event_bus)
 
         # Напрямую в репозиторий Riak добавляем товар, которого нет в PostgreSQL
@@ -106,7 +106,7 @@ class TestServicesHydration:
         student_user: User,
         sample_product: Product,
     ) -> None:
-        product_service = ProductService(repos.product_repo)
+        product_service = ProductService(repos.product_repo, repos.event_bus)
         fav_service = FavouritesService(
             repos.favourites_repo, product_service, repos.event_bus
         )
@@ -145,7 +145,7 @@ class TestServicesHydration:
         student_user: User,
     ) -> None:
         user_service = UserService(repos.user_repo, None, repos.event_bus)  # type: ignore[arg-type]
-        product_service = ProductService(repos.product_repo)
+        product_service = ProductService(repos.product_repo, repos.event_bus)
         fav_service = FavouritesService(
             repos.favourites_repo, product_service, repos.event_bus
         )
