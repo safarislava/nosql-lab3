@@ -37,7 +37,9 @@ class OrderService:
         if dto.quantity <= 0:
             raise InvalidOrderQuantityException()
 
-        product = self._product_service.reserve_stock(dto.product_id, dto.quantity)
+        product = self._product_service.reserve_stock(
+            user_id, dto.product_id, dto.quantity
+        )
         snapshot = ProductSnapshot.from_product(product)
 
         order = Order(
@@ -71,13 +73,9 @@ class OrderService:
     def get_by_id(
         self,
         order_id: UUID,
-        user_id: UUID | None = None,
     ) -> OrderResponseDto:
         order = self._order_repository.get_by_id(order_id)
         if order is None:
-            raise OrderNotFoundException(order_id)
-
-        if user_id is not None and order.user_id != user_id:
             raise OrderNotFoundException(order_id)
 
         return OrderResponseDto.from_domain(order)
@@ -113,14 +111,11 @@ class OrderService:
 
     def cancel(
         self,
+        user_id: UUID,
         order_id: UUID,
-        user_id: UUID | None = None,
     ) -> OrderResponseDto:
         order = self._order_repository.get_by_id(order_id)
         if order is None:
-            raise OrderNotFoundException(order_id)
-
-        if user_id is not None and order.user_id != user_id:
             raise OrderNotFoundException(order_id)
 
         if order.status != OrderStatus.CREATED:
@@ -133,21 +128,23 @@ class OrderService:
             order_id, OrderStatus.CANCELLED, expected_status=OrderStatus.CREATED
         )
         if updated_order is None:
-            order = self._order_repository.get_by_id(order_id)
-            curr_status = order.status if order else "UNKNOWN"
+            curr = self._order_repository.get_by_id(order_id)
+            curr_status = curr.status if curr else "UNKNOWN"
             raise InvalidOrderStatusException(
                 f"Невозможно отменить заказ со статусом {curr_status}. "
                 f"Отмена доступна только для заказов в статусе CREATED (до одобрения)."
             )
 
         self._product_service.restore_stock(
-            updated_order.product_id, updated_order.quantity
+            user_id,
+            updated_order.product_id,
+            updated_order.quantity,
         )
         self._product_service.decrement_orders_count(updated_order.product_id, 1)
 
         self._event_bus.publish(
             OperationEvent(
-                user_id=updated_order.user_id,
+                user_id=user_id,
                 action=OperationType.CANCEL_ORDER,
                 target_id=updated_order.id,
                 details={
@@ -159,7 +156,7 @@ class OrderService:
 
         return OrderResponseDto.from_domain(updated_order)
 
-    def approve(self, order_id: UUID) -> OrderResponseDto:
+    def approve(self, user_id: UUID, order_id: UUID) -> OrderResponseDto:
         updated_order = self._order_repository.update_status_and_get(
             order_id, OrderStatus.APPROVED, expected_status=OrderStatus.CREATED
         )
@@ -173,7 +170,7 @@ class OrderService:
 
         self._event_bus.publish(
             OperationEvent(
-                user_id=updated_order.user_id,
+                user_id=user_id,
                 action=OperationType.APPROVE_ORDER,
                 target_id=updated_order.id,
             )
@@ -181,7 +178,7 @@ class OrderService:
 
         return OrderResponseDto.from_domain(updated_order)
 
-    def reject(self, order_id: UUID) -> OrderResponseDto:
+    def reject(self, user_id: UUID, order_id: UUID) -> OrderResponseDto:
         updated_order = self._order_repository.update_status_and_get(
             order_id, OrderStatus.REJECTED, expected_status=OrderStatus.CREATED
         )
@@ -194,13 +191,15 @@ class OrderService:
             )
 
         self._product_service.restore_stock(
-            updated_order.product_id, updated_order.quantity
+            user_id,
+            updated_order.product_id,
+            updated_order.quantity,
         )
         self._product_service.decrement_orders_count(updated_order.product_id, 1)
 
         self._event_bus.publish(
             OperationEvent(
-                user_id=updated_order.user_id,
+                user_id=user_id,
                 action=OperationType.REJECT_ORDER,
                 target_id=updated_order.id,
             )
