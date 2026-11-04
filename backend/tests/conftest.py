@@ -83,9 +83,9 @@ from infrastructure.http.favourites.dependencies import (
     get_favourites_service,
 )
 from infrastructure.http.history.dependencies import (
+    get_cassandra_history_repository,
     get_history_repository,
     get_history_service,
-    get_postgres_history_repository,
     get_riak_history_cache_repository,
 )
 from infrastructure.http.order.dependencies import (
@@ -109,6 +109,9 @@ from infrastructure.http.user.dependencies import (
     get_password_hasher,
     get_user_repository,
     get_user_service,
+)
+from infrastructure.persistence.cassandra.history_repository import (
+    CassandraHistoryRepository,
 )
 from infrastructure.persistence.composite.history_repository import (
     CompositeHistoryRepository,
@@ -315,6 +318,9 @@ class RepositoriesContainer:
     riak_history_cache_repo: RiakHistoryCacheRepository = field(
         default_factory=RiakHistoryCacheRepository
     )
+    cassandra_history_repo: CassandraHistoryRepository = field(
+        default_factory=get_cassandra_history_repository
+    )
     history_repo: CompositeHistoryRepository = field(init=False)
     teacher_repo: PostgresTeacherRepository = field(
         default_factory=PostgresTeacherRepository
@@ -324,6 +330,7 @@ class RepositoriesContainer:
     def __post_init__(self) -> None:
         self.history_repo = CompositeHistoryRepository(
             riak_repo=self.riak_history_cache_repo,
+            cassandra_repo=self.cassandra_history_repo,
         )
 
 
@@ -425,7 +432,7 @@ def client(
         get_counter_repository: lambda: repos.counter_repo,
         get_order_service: lambda: order_service,
         get_checkout_service: lambda: checkout_service,
-        get_postgres_history_repository: lambda: repos.postgres_history_repo,
+        get_cassandra_history_repository: lambda: repos.cassandra_history_repo,
         get_riak_history_cache_repository: lambda: repos.riak_history_cache_repo,
         get_history_repository: lambda: repos.history_repo,
         get_history_service: lambda: history_service,
