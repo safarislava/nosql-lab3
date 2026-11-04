@@ -61,3 +61,49 @@ class UserHistoryResponseDto:
             limit=limit,
             next_cursor=next_cursor,
         )
+
+
+@dataclass(frozen=True)
+class ProductHistoryResponseDto:
+    product_id: UUID
+    events: list[OperationEventResponseDto]
+    limit: int
+    next_cursor: UUID | None = None
+
+    @classmethod
+    def from_events(
+        cls,
+        product_id: UUID,
+        events: list[OperationEvent],
+        limit: int = 20,
+    ) -> "ProductHistoryResponseDto":
+        next_cursor = events[-1].id if len(events) == limit else None
+        return cls(
+            product_id=product_id,
+            events=[OperationEventResponseDto.from_domain(e) for e in events],
+            limit=limit,
+            next_cursor=next_cursor,
+        )
+
+
+@dataclass(frozen=True)
+class OrderHistoryResponseDto:
+    order_id: UUID
+    events: list[OperationEventResponseDto]
+    limit: int
+    next_cursor: UUID | None = None
+
+    @classmethod
+    def from_events(
+        cls,
+        order_id: UUID,
+        events: list[OperationEvent],
+        limit: int = 20,
+    ) -> "OrderHistoryResponseDto":
+        next_cursor = events[-1].id if len(events) == limit else None
+        return cls(
+            order_id=order_id,
+            events=[OperationEventResponseDto.from_domain(e) for e in events],
+            limit=limit,
+            next_cursor=next_cursor,
+        )
