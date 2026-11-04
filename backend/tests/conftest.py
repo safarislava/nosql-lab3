@@ -375,6 +375,7 @@ def client(
     )
     product_service = ProductService(
         product_repository=repos.product_repo,
+        event_bus=repos.event_bus,
     )
     cart_service = CartService(
         cart_repository=repos.cart_repo,

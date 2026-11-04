@@ -11,6 +11,7 @@ from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.cart.dependencies import CartServiceDep
 from infrastructure.http.favourites.dependencies import FavouritesServiceDep
 from infrastructure.http.middleware.authentication_middleware import (
+    CurrentUserDep,
     OptionalCurrentUserDep,
 )
 from infrastructure.http.product.schemas import (
@@ -112,9 +113,10 @@ def get_product_analytics(service: ProductServiceDep) -> ProductAnalyticsRespons
 )
 def create_product(
     request: CreateProductRequest,
+    current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> ProductResponse:
-    product_dto = service.create(request.to_dto())
+    product_dto = service.create(current_user.id, request.to_dto())
     return ProductResponse.from_dto(product_dto)
 
 
@@ -158,9 +160,10 @@ def get_product_by_id(
 def update_product(
     product_id: UUID,
     request: UpdateProductRequest,
+    current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> ProductResponse:
-    product_dto = service.update(product_id, request.to_dto())
+    product_dto = service.update(current_user.id, product_id, request.to_dto())
     return ProductResponse.from_dto(product_dto)
 
 
@@ -172,9 +175,10 @@ def update_product(
 )
 def delete_product(
     product_id: UUID,
+    current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> None:
-    service.delete(product_id)
+    service.delete(current_user.id, product_id)
 
 
 @router.post(
@@ -187,9 +191,10 @@ def delete_product(
 def reserve_stock(
     product_id: UUID,
     request: StockOperationRequest,
+    current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> ProductResponse:
-    product_dto = service.reserve_stock(product_id, request.amount)
+    product_dto = service.reserve_stock(current_user.id, product_id, request.amount)
     return ProductResponse.from_dto(product_dto)
 
 
@@ -203,7 +208,8 @@ def reserve_stock(
 def restore_stock(
     product_id: UUID,
     request: StockOperationRequest,
+    current_user: CurrentUserDep,
     service: ProductServiceDep,
 ) -> ProductResponse:
-    product_dto = service.restore_stock(product_id, request.amount)
+    product_dto = service.restore_stock(current_user.id, product_id, request.amount)
     return ProductResponse.from_dto(product_dto)

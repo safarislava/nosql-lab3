@@ -6,6 +6,7 @@ from fastapi import Depends
 from application.product.analytics_cache import IProductAnalyticsCache
 from application.product.repository import IProductRepository
 from application.product.service import ProductService
+from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.http.product.category.dependencies import (
     get_category_repository,
 )
@@ -38,9 +39,11 @@ ProductRepositoryDep = Annotated[IProductRepository, Depends(get_product_reposit
 
 def get_product_service(
     product_repository: ProductRepositoryDep,
+    event_bus: EventBusDep,
 ) -> ProductService:
     return ProductService(
         product_repository=product_repository,
+        event_bus=event_bus,
         analytics_cache=get_product_analytics_cache(),
     )
 
