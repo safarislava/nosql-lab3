@@ -1,10 +1,11 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, status
-
+from application.order.exceptions import OrderNotFoundException
 from domain.order import OrderStatus
 from domain.user import UserRole
+from fastapi import APIRouter, Query, status
+
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 
@@ -123,7 +124,9 @@ def get_order_me(
     current_user: CurrentUserDep,
     service: OrderServiceDep,
 ) -> OrderResponse:
-    dto = service.get_by_id(order_id=order_id, user_id=current_user.id)
+    dto = service.get_by_id(order_id)
+    if dto.user_id != current_user.id:
+        raise OrderNotFoundException(order_id)
     return OrderResponse.from_dto(dto)
 
 
@@ -139,8 +142,11 @@ def cancel_order_me_post(
     current_user: CurrentUserDep,
     service: OrderServiceDep,
 ) -> OrderResponse:
-    dto = service.cancel(order_id=order_id, user_id=current_user.id)
-    return OrderResponse.from_dto(dto)
+    dto = service.get_by_id(order_id)
+    if dto.user_id != current_user.id:
+        raise OrderNotFoundException(order_id)
+    cancelled = service.cancel(current_user.id, order_id)
+    return OrderResponse.from_dto(cancelled)
 
 
 @router.get(
@@ -155,7 +161,9 @@ def get_order_by_user_id(
     order_id: UUID,
     service: OrderServiceDep,
 ) -> OrderResponse:
-    dto = service.get_by_id(order_id=order_id, user_id=user_id)
+    dto = service.get_by_id(order_id)
+    if dto.user_id != user_id:
+        raise OrderNotFoundException(order_id)
     return OrderResponse.from_dto(dto)
 
 
@@ -203,9 +211,10 @@ def get_order(
 )
 def cancel_order(
     order_id: UUID,
+    current_user: CurrentUserDep,
     service: OrderServiceDep,
 ) -> OrderResponse:
-    dto = service.cancel(order_id)
+    dto = service.cancel(current_user.id, order_id)
     return OrderResponse.from_dto(dto)
 
 
@@ -218,9 +227,10 @@ def cancel_order(
 )
 def approve_order(
     order_id: UUID,
+    current_user: CurrentUserDep,
     service: OrderServiceDep,
 ) -> OrderResponse:
-    dto = service.approve(order_id)
+    dto = service.approve(current_user.id, order_id)
     return OrderResponse.from_dto(dto)
 
 
@@ -233,7 +243,8 @@ def approve_order(
 )
 def reject_order(
     order_id: UUID,
+    current_user: CurrentUserDep,
     service: OrderServiceDep,
 ) -> OrderResponse:
-    dto = service.reject(order_id)
+    dto = service.reject(current_user.id, order_id)
     return OrderResponse.from_dto(dto)
