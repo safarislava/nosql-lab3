@@ -2326,6 +2326,94 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
+  /api/history:
+    get:
+      tags:
+      - History
+      summary: Получить события заданного типа за период (Admin)
+      operationId: get_events_by_type_api_history_get
+      parameters:
+      - name: event_type
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/OperationType'
+          description: Тип события
+        description: Тип события
+      - name: start_time
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Начало периода (включительно)
+          title: Start Time
+        description: Начало периода (включительно)
+      - name: end_time
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Конец периода (включительно)
+          title: End Time
+        description: Конец периода (включительно)
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Количество событий на страницу (limit)
+          default: 50
+          title: Limit
+        description: Количество событий на страницу (limit)
+      - name: last_event_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Курсор последнего события (event_id)
+          title: Last Event Id
+        description: Курсор последнего события (event_id)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsByTypeResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+        '403':
+          description: Недостаточно прав доступа для выполнения данной операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - ADMIN
+      description: '**Требуемые роли:** `ADMIN`'
   /api/users/me/teacher:
     get:
       tags:
@@ -3776,6 +3864,30 @@ components:
       - name
       - price
       title: CreateProductRequest
+    EventsByTypeResponse:
+      properties:
+        event_type:
+          $ref: '#/components/schemas/OperationType'
+        events:
+          items:
+            $ref: '#/components/schemas/OperationEventResponse'
+          type: array
+          title: Events
+        limit:
+          type: integer
+          title: Limit
+          default: 50
+        next_cursor:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - event_type
+      - events
+      title: EventsByTypeResponse
     FavouriteItemResponse:
       properties:
         product_id:
