@@ -568,7 +568,6 @@ paths:
           - type: number
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           - type: 'null'
           description: Минимальная цена
           title: Min Price
@@ -581,7 +580,6 @@ paths:
           - type: number
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           - type: 'null'
           description: Максимальная цена
           title: Max Price
@@ -616,6 +614,28 @@ paths:
           description: Фильтр по категориям
           title: Category Ids
         description: Фильтр по категориям
+      - name: created_from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Дата создания от, включительно
+          title: Created From
+        description: Дата создания от, включительно
+      - name: created_to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Дата создания до, включительно
+          title: Created To
+        description: Дата создания до, включительно
       - name: offset
         in: query
         required: false
@@ -674,6 +694,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+        '403':
+          description: Недостаточно прав доступа для выполнения данной операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - ADMIN
+      description: '**Требуемые роли:** `ADMIN`'
+  /api/products/analytics:
+    get:
+      tags:
+      - Products
+      summary: Среднее количество изменений товара по состояниям наличия
+      operationId: get_product_analytics_api_products_analytics_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductAnalyticsResponse'
         '401':
           description: Пользователь не аутентифицирован.
           content:
@@ -2032,16 +2082,6 @@ paths:
       summary: Получить историю действий текущего пользователя
       operationId: get_user_history_me_api_users_me_history_get
       parameters:
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          description: Смещение (offset)
-          default: 0
-          title: Offset
-        description: Смещение (offset)
       - name: limit
         in: query
         required: false
@@ -2053,6 +2093,17 @@ paths:
           default: 20
           title: Limit
         description: Количество событий на страницу (limit)
+      - name: last_event_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Курсор последнего события (event_id)
+          title: Last Event Id
+        description: Курсор последнего события (event_id)
       responses:
         '200':
           description: Successful Response
@@ -2066,25 +2117,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Пользователь не аутентифицирован.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorDetailResponse'
-      security:
-      - BearerAuth: []
-      x-required-roles:
-      - AUTHENTICATED
-      description: '**Требуемые роли:** Любой авторизованный пользователь'
-    delete:
-      tags:
-      - History
-      summary: Очистить историю действий текущего пользователя
-      operationId: clear_user_history_me_api_users_me_history_delete
-      responses:
-        '204':
-          description: Successful Response
         '401':
           description: Пользователь не аутентифицирован.
           content:
@@ -2110,16 +2142,6 @@ paths:
           type: string
           format: uuid
           title: User Id
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          description: Смещение (offset)
-          default: 0
-          title: Offset
-        description: Смещение (offset)
       - name: limit
         in: query
         required: false
@@ -2131,6 +2153,17 @@ paths:
           default: 20
           title: Limit
         description: Количество событий на страницу (limit)
+      - name: last_event_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Курсор последнего события (event_id)
+          title: Last Event Id
+        description: Курсор последнего события (event_id)
       responses:
         '200':
           description: Successful Response
@@ -2161,22 +2194,115 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
-    delete:
+  /api/products/{product_id}/history:
+    get:
       tags:
       - History
-      summary: Очистить историю действий пользователя по ID (Admin)
-      operationId: clear_user_history_by_user_id_api_users__user_id__history_delete
+      summary: Получить историю операций над товаром по ID (Admin)
+      operationId: get_product_history_api_products__product_id__history_get
       parameters:
-      - name: user_id
+      - name: product_id
         in: path
         required: true
         schema:
           type: string
           format: uuid
-          title: User Id
+          title: Product Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Количество событий на страницу (limit)
+          default: 20
+          title: Limit
+        description: Количество событий на страницу (limit)
+      - name: last_event_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Курсор последнего события (event_id)
+          title: Last Event Id
+        description: Курсор последнего события (event_id)
       responses:
-        '204':
+        '200':
           description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductHistoryResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+        '403':
+          description: Недостаточно прав доступа для выполнения данной операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - ADMIN
+      description: '**Требуемые роли:** `ADMIN`'
+  /api/orders/{order_id}/history:
+    get:
+      tags:
+      - History
+      summary: Получить историю операций над заказом по ID (Admin)
+      operationId: get_order_history_api_orders__order_id__history_get
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Order Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Количество событий на страницу (limit)
+          default: 20
+          title: Limit
+        description: Количество событий на страницу (limit)
+      - name: last_event_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Курсор последнего события (event_id)
+          title: Last Event Id
+        description: Курсор последнего события (event_id)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderHistoryResponse'
         '422':
           description: Validation Error
           content:
@@ -3425,7 +3551,6 @@ components:
           - type: 'null'
         subtotal:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Subtotal
           description: Подытог по позиции (цена * кол-во)
           default: '0.00'
@@ -3461,7 +3586,6 @@ components:
           title: Total Items
         total_amount:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Total Amount
           description: Общая стоимость товаров в корзине
           default: '0.00'
@@ -3526,7 +3650,6 @@ components:
           title: Total Orders
         total_amount:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Total Amount
       type: object
       required:
@@ -3628,7 +3751,6 @@ components:
           - type: number
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Price
           examples:
           - '79990.00'
@@ -3788,6 +3910,11 @@ components:
       - CANCEL_ORDER
       - APPROVE_ORDER
       - REJECT_ORDER
+      - CREATE_PRODUCT
+      - UPDATE_PRODUCT
+      - DELETE_PRODUCT
+      - RESERVE_STOCK
+      - RESTORE_STOCK
       - CHECKOUT
       - USER_REGISTER
       - UPDATE_PROFILE
@@ -3796,6 +3923,32 @@ components:
       - ADD_STUDENT
       - REMOVE_STUDENT
       title: OperationType
+    OrderHistoryResponse:
+      properties:
+        order_id:
+          type: string
+          format: uuid
+          title: Order Id
+        events:
+          items:
+            $ref: '#/components/schemas/OperationEventResponse'
+          type: array
+          title: Events
+        limit:
+          type: integer
+          title: Limit
+          default: 20
+        next_cursor:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - order_id
+      - events
+      title: OrderHistoryResponse
     OrderListResponse:
       properties:
         items:
@@ -3839,11 +3992,9 @@ components:
           title: Quantity
         unit_price:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Unit Price
         total_amount:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Total Amount
         status:
           $ref: '#/components/schemas/OrderStatus'
@@ -3873,6 +4024,17 @@ components:
       - REJECTED
       - CANCELLED
       title: OrderStatus
+    ProductAnalyticsResponse:
+      properties:
+        by_state:
+          items:
+            $ref: '#/components/schemas/ProductStateChangesResponse'
+          type: array
+          title: By State
+      type: object
+      required:
+      - by_state
+      title: ProductAnalyticsResponse
     ProductAttachmentInput:
       properties:
         id:
@@ -3943,6 +4105,32 @@ components:
       required:
       - name
       title: ProductCategoryInput
+    ProductHistoryResponse:
+      properties:
+        product_id:
+          type: string
+          format: uuid
+          title: Product Id
+        events:
+          items:
+            $ref: '#/components/schemas/OperationEventResponse'
+          type: array
+          title: Events
+        limit:
+          type: integer
+          title: Limit
+          default: 20
+        next_cursor:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - product_id
+      - events
+      title: ProductHistoryResponse
     ProductListResponse:
       properties:
         items:
@@ -3976,7 +4164,6 @@ components:
           title: Description
         price:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Price
         quantity:
           type: integer
@@ -4028,7 +4215,6 @@ components:
           description: Описание товара на момент заказа
         price:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Price
           description: Цена товара на момент заказа
       type: object
@@ -4048,6 +4234,23 @@ components:
       - name_desc
       - newest
       title: ProductSortBy
+    ProductStateChangesResponse:
+      properties:
+        state:
+          type: string
+          title: State
+        average_changes:
+          type: number
+          title: Average Changes
+        product_count:
+          type: integer
+          title: Product Count
+      type: object
+      required:
+      - state
+      - average_changes
+      - product_count
+      title: ProductStateChangesResponse
     RecoveryResponse:
       properties:
         token:
@@ -4285,7 +4488,6 @@ components:
           - type: number
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           - type: 'null'
           title: Price
         quantity:
@@ -4338,18 +4540,20 @@ components:
             $ref: '#/components/schemas/OperationEventResponse'
           type: array
           title: Events
-        offset:
-          type: integer
-          title: Offset
         limit:
           type: integer
           title: Limit
+          default: 20
+        next_cursor:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Next Cursor
       type: object
       required:
       - user_id
       - events
-      - offset
-      - limit
       title: UserHistoryResponse
     UserResponse:
       properties:
