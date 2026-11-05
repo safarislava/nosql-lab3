@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
+import { getProductHistory } from "../api/history";
 import { getProduct } from "../api/products";
 import { addFavourite, removeFavourite, setCartQuantity } from "../api/shop";
 import type { Product } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { HeartIcon } from "../components/HeartIcon";
+import { HistoryFeed } from "../components/HistoryFeed";
+import { Modal } from "../components/Modal";
 import { formatPrice } from "../lib/format";
 import { usePaths } from "../routing";
 
@@ -13,10 +16,11 @@ export function ProductPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const paths = usePaths();
-  const { favouriteIds, cartIds, refreshShop } = useAuth();
+  const { user, favouriteIds, cartIds, refreshShop } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (!productId) return;
@@ -131,6 +135,15 @@ export function ProductPage() {
           >
             {inCart ? "В корзине" : "В корзину"}
           </button>
+          {user?.role === "ADMIN" ? (
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => setShowHistory(true)}
+            >
+              История изменений
+            </button>
+          ) : null}
         </div>
 
         {/* Вложения товара */}
@@ -155,6 +168,25 @@ export function ProductPage() {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        title={`История изменений: ${current.name}`}
+      >
+        <HistoryFeed
+          key={current.id}
+          fetchPage={useCallback(
+            (cursor?: string | null) =>
+              getProductHistory(current.id, {
+                limit: 10,
+                last_event_id: cursor,
+              }),
+            [current.id],
+          )}
+          emptyText="Событий по этому товару пока нет"
+        />
+      </Modal>
     </section>
   );
 

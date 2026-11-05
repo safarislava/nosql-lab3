@@ -1,8 +1,10 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { changePassword, deleteAccount, logoutAll, updateProfile } from "../api/auth";
 import { ApiError } from "../api/client";
+import { getMyHistory } from "../api/history";
 import { useAuth } from "../auth/AuthContext";
+import { HistoryFeed } from "../components/HistoryFeed";
 import { roleLabel } from "../lib/format";
 
 export function ProfilePage() {
@@ -118,6 +120,22 @@ export function ProfilePage() {
         <button type="button" className="btn btn--danger" onClick={() => void onDelete()}>
           Удалить аккаунт
         </button>
+      </div>
+
+      <div style={{ marginTop: 36, borderTop: "1px solid var(--line)", paddingTop: 24 }}>
+        <h2>История действий</h2>
+        <p className="muted" style={{ margin: "6px 0 16px" }}>
+          Журнал операций вашего аккаунта (сохраняется в Apache Cassandra)
+        </p>
+        <HistoryFeed
+          fetchPage={useCallback(
+            (cursor?: string | null) =>
+              getMyHistory({ limit: 10, last_event_id: cursor }),
+            [],
+          )}
+          showUserId={false}
+          emptyText="У вас пока нет зарегистрированных действий"
+        />
       </div>
     </div>
   );

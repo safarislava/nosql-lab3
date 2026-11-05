@@ -165,3 +165,54 @@ export type RecoveryToken = {
   expires_at: string;
   is_expired: boolean;
 };
+
+export type OperationType =
+  | "CREATE_PRODUCT"
+  | "UPDATE_PRODUCT"
+  | "DELETE_PRODUCT"
+  | "RESERVE_STOCK"
+  | "RESTORE_STOCK"
+  | "CREATE_ORDER"
+  | "CANCEL_ORDER"
+  | "APPROVE_ORDER"
+  | "REJECT_ORDER"
+  | "CHECKOUT"
+  | "USER_REGISTER"
+  | "UPDATE_PROFILE"
+  | "ADD_FAVOURITE"
+  | "REMOVE_FAVOURITE"
+  | "CLEAR_FAVOURITES"
+  | "ADD_CART_ITEM"
+  | "REMOVE_CART_ITEM"
+  | "UPDATE_CART_ITEM"
+  | "CLEAR_CART"
+  | "ADD_STUDENT"
+  | "REMOVE_STUDENT";
+
+export type OperationEvent = {
+  id: string;
+  user_id: string;
+  action: OperationType;
+  target_id?: string | null;
+  details?: Record<string, unknown>;
+  timestamp: string;
+};
+
+export type CursorPage<T> = {
+  events: T[];
+  limit: number;
+  next_cursor?: string | null;
+};
+
+export type UserHistoryResponse = CursorPage<OperationEvent> & {
+  user_id: string;
+};
+
+export type ProductHistoryResponse = CursorPage<OperationEvent> & {
+  product_id: string;
+};
+
+export type OrderHistoryResponse = CursorPage<OperationEvent> & {
+  order_id: string;
+};
+
