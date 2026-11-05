@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiError } from "../api/client";
 import { getOrderHistory } from "../api/history";
 import { approveOrder, listAllOrders, rejectOrder } from "../api/orders";
@@ -119,11 +119,9 @@ export function AdminOrdersPage() {
         {historyOrder ? (
           <HistoryFeed
             key={historyOrder.id}
-            fetchPage={useCallback(
-              (cursor?: string | null) =>
-                getOrderHistory(historyOrder.id, { limit: 10, last_event_id: cursor }),
-              [historyOrder.id],
-            )}
+            fetchPage={(cursor) =>
+              getOrderHistory(historyOrder.id, { limit: 10, last_event_id: cursor })
+            }
             emptyText="Событий по этому заказу пока нет"
           />
         ) : null}

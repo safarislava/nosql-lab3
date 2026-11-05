@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ApiError } from "../api/client";
 import { getProductHistory } from "../api/history";
 import {
@@ -867,14 +867,12 @@ export function AdminProductsPage() {
         {historyProduct ? (
           <HistoryFeed
             key={historyProduct.id}
-            fetchPage={useCallback(
-              (cursor?: string | null) =>
-                getProductHistory(historyProduct.id, {
-                  limit: 10,
-                  last_event_id: cursor,
-                }),
-              [historyProduct.id],
-            )}
+            fetchPage={(cursor) =>
+              getProductHistory(historyProduct.id, {
+                limit: 10,
+                last_event_id: cursor,
+              })
+            }
             emptyText="Событий по этому товару пока нет"
           />
         ) : null}

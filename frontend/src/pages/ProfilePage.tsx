@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { changePassword, deleteAccount, logoutAll, updateProfile } from "../api/auth";
 import { ApiError } from "../api/client";
@@ -128,11 +128,9 @@ export function ProfilePage() {
           Журнал операций вашего аккаунта (сохраняется в Apache Cassandra)
         </p>
         <HistoryFeed
-          fetchPage={useCallback(
-            (cursor?: string | null) =>
-              getMyHistory({ limit: 10, last_event_id: cursor }),
-            [],
-          )}
+          fetchPage={(cursor) =>
+            getMyHistory({ limit: 10, last_event_id: cursor })
+          }
           showUserId={false}
           emptyText="У вас пока нет зарегистрированных действий"
         />

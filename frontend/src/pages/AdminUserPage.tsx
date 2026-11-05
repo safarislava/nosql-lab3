@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useState } from "react";
+import { FormEvent, useState } from "react";
 import {
   addUserFavourite,
   checkoutUser,
@@ -185,11 +185,9 @@ export function AdminUserPage() {
             </p>
             <HistoryFeed
               key={user.id}
-              fetchPage={useCallback(
-                (cursor?: string | null) =>
-                  getUserHistory(user.id, { limit: 15, last_event_id: cursor }),
-                [user.id],
-              )}
+              fetchPage={(cursor) =>
+                getUserHistory(user.id, { limit: 15, last_event_id: cursor })
+              }
               showUserId={false}
               emptyText="Событий для данного пользователя нет"
             />

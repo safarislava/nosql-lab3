@@ -92,7 +92,13 @@ export function CatalogPage() {
     detectSchemaVersion().then((ver) => {
       if (ver === 2) {
         searchCategories()
-          .then(setAvailableCategories)
+          .then((cats) => {
+            if (cats && cats.length > 0) {
+              setAvailableCategories(cats);
+            } else {
+              setAvailableCategories(CATEGORY_PRESETS);
+            }
+          })
           .catch(() => {
             setAvailableCategories(CATEGORY_PRESETS);
           });
@@ -101,6 +107,37 @@ export function CatalogPage() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    setAvailableCategories((prev) => {
+      const knownIds = new Set(prev.map((c) => c.id));
+      const knownNames = new Set(prev.map((c) => c.name.toLowerCase()));
+      const extra: Category[] = [];
+      for (const item of items) {
+        for (const cat of item.categories || []) {
+          if (cat.id && !knownIds.has(cat.id)) {
+            knownIds.add(cat.id);
+            extra.push({
+              id: cat.id,
+              name: cat.name,
+              slug: cat.slug,
+              description: cat.description,
+            });
+          } else if (!cat.id && !knownNames.has(cat.name.toLowerCase())) {
+            knownNames.add(cat.name.toLowerCase());
+            extra.push({
+              id: cat.name,
+              name: cat.name,
+              slug: cat.slug,
+              description: cat.description,
+            });
+          }
+        }
+      }
+      return extra.length > 0 ? [...prev, ...extra] : prev;
+    });
+  }, [items]);
 
   function toggleCategory(categoryId: string) {
     const current = new Set(filters.category_ids);

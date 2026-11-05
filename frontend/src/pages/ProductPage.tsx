@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { getProductHistory } from "../api/history";
@@ -176,14 +176,12 @@ export function ProductPage() {
       >
         <HistoryFeed
           key={current.id}
-          fetchPage={useCallback(
-            (cursor?: string | null) =>
-              getProductHistory(current.id, {
-                limit: 10,
-                last_event_id: cursor,
-              }),
-            [current.id],
-          )}
+          fetchPage={(cursor) =>
+            getProductHistory(current.id, {
+              limit: 10,
+              last_event_id: cursor,
+            })
+          }
           emptyText="Событий по этому товару пока нет"
         />
       </Modal>

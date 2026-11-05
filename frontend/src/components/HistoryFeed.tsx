@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../api/client";
 import type { OperationEvent } from "../api/types";
 import {
@@ -26,30 +26,15 @@ export function HistoryFeed({
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadInitial() {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetchPage(null);
-      setEvents(res.events || []);
-      setNextCursor(res.next_cursor ?? null);
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "Не удалось загрузить историю событий",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+  const fetchRef = useRef(fetchPage);
+  fetchRef.current = fetchPage;
 
   async function loadMore() {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     setError("");
     try {
-      const res = await fetchPage(nextCursor);
+      const res = await fetchRef.current(nextCursor);
       setEvents((prev) => [...prev, ...(res.events || [])]);
       setNextCursor(res.next_cursor ?? null);
     } catch (err) {
@@ -64,8 +49,31 @@ export function HistoryFeed({
   }
 
   useEffect(() => {
-    void loadInitial();
-  }, [fetchPage]);
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    fetchRef.current(null)
+      .then((res) => {
+        if (cancelled) return;
+        setEvents(res.events || []);
+        setNextCursor(res.next_cursor ?? null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "Не удалось загрузить историю событий",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="history-feed">
