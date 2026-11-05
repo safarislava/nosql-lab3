@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { ApiError } from "../api/client";
+import { getProductHistory } from "../api/history";
 import {
   addProductAttachment,
   createProduct,
@@ -16,6 +17,8 @@ import type {
   ProductCategoryInput,
 } from "../api/types";
 import { CategorySelector } from "../components/CategorySelector";
+import { HistoryFeed } from "../components/HistoryFeed";
+import { Modal } from "../components/Modal";
 import { generateRandomAttachment } from "../lib/attachmentGenerator";
 import { formatBytes, formatPrice } from "../lib/format";
 
@@ -48,6 +51,7 @@ export function AdminProductsPage() {
   const [error, setError] = useState("");
   const [warning, setWarning] = useState("");
   const [loading, setLoading] = useState(true);
+  const [historyProduct, setHistoryProduct] = useState<Product | null>(null);
 
   // Фильтрация и пагинация для админа
   const [searchQuery, setSearchQuery] = useState("");
@@ -598,6 +602,13 @@ export function AdminProductsPage() {
                   )}
                   <button
                     type="button"
+                    className="btn btn--ghost"
+                    onClick={() => setHistoryProduct(product)}
+                  >
+                    История
+                  </button>
+                  <button
+                    type="button"
                     className="btn btn--danger"
                     onClick={() => void onDelete(product.id)}
                   >
@@ -847,6 +858,25 @@ export function AdminProductsPage() {
           </button>
         </div>
       )}
+
+      <Modal
+        isOpen={!!historyProduct}
+        onClose={() => setHistoryProduct(null)}
+        title={historyProduct ? `История изменений: ${historyProduct.name}` : ""}
+      >
+        {historyProduct ? (
+          <HistoryFeed
+            key={historyProduct.id}
+            fetchPage={(cursor) =>
+              getProductHistory(historyProduct.id, {
+                limit: 10,
+                last_event_id: cursor,
+              })
+            }
+            emptyText="Событий по этому товару пока нет"
+          />
+        ) : null}
+      </Modal>
     </>
   );
 }

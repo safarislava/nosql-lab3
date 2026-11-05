@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from application.history.dto import (
+    EventsByTypeResponseDto,
     OperationEventResponseDto,
     OrderHistoryResponseDto,
     ProductHistoryResponseDto,
@@ -75,6 +76,22 @@ class OrderHistoryResponse(BaseModel):
     def from_dto(cls, dto: OrderHistoryResponseDto) -> "OrderHistoryResponse":
         return cls(
             order_id=dto.order_id,
+            events=[OperationEventResponse.from_dto(e) for e in dto.events],
+            limit=dto.limit,
+            next_cursor=dto.next_cursor,
+        )
+
+
+class EventsByTypeResponse(BaseModel):
+    event_type: OperationType
+    events: list[OperationEventResponse]
+    limit: int = 50
+    next_cursor: UUID | None = None
+
+    @classmethod
+    def from_dto(cls, dto: EventsByTypeResponseDto) -> "EventsByTypeResponse":
+        return cls(
+            event_type=dto.event_type,
             events=[OperationEventResponse.from_dto(e) for e in dto.events],
             limit=dto.limit,
             next_cursor=dto.next_cursor,

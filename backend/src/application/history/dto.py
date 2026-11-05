@@ -107,3 +107,26 @@ class OrderHistoryResponseDto:
             limit=limit,
             next_cursor=next_cursor,
         )
+
+
+@dataclass(frozen=True)
+class EventsByTypeResponseDto:
+    event_type: OperationType
+    events: list[OperationEventResponseDto]
+    limit: int
+    next_cursor: UUID | None = None
+
+    @classmethod
+    def from_events(
+        cls,
+        event_type: OperationType,
+        events: list[OperationEvent],
+        limit: int = 50,
+    ) -> "EventsByTypeResponseDto":
+        next_cursor = events[-1].id if len(events) == limit else None
+        return cls(
+            event_type=event_type,
+            events=[OperationEventResponseDto.from_domain(e) for e in events],
+            limit=limit,
+            next_cursor=next_cursor,
+        )

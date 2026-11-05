@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "../api/client";
+import { getOrderHistory } from "../api/history";
 import { approveOrder, listAllOrders, rejectOrder } from "../api/orders";
 import type { Order, OrderStatus } from "../api/types";
+import { HistoryFeed } from "../components/HistoryFeed";
+import { Modal } from "../components/Modal";
 import { formatPrice, ORDER_STATUS_LABEL } from "../lib/format";
 
 export function AdminOrdersPage() {
@@ -10,6 +13,7 @@ export function AdminOrdersPage() {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [historyOrder, setHistoryOrder] = useState<Order | null>(null);
 
   async function load(nextStatus: OrderStatus | "" = status) {
     setLoading(true);
@@ -85,6 +89,13 @@ export function AdminOrdersPage() {
               <span className={`status status--${order.status}`}>
                 {ORDER_STATUS_LABEL[order.status]}
               </span>
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                onClick={() => setHistoryOrder(order)}
+              >
+                История
+              </button>
               {order.status === "CREATED" ? (
                 <>
                   <button type="button" className="btn btn--primary" onClick={() => void act("approve", order.id)}>
@@ -99,6 +110,22 @@ export function AdminOrdersPage() {
           </article>
         ))}
       </div>
+
+      <Modal
+        isOpen={!!historyOrder}
+        onClose={() => setHistoryOrder(null)}
+        title={historyOrder ? `История заказа #${historyOrder.id.slice(0, 8)}` : ""}
+      >
+        {historyOrder ? (
+          <HistoryFeed
+            key={historyOrder.id}
+            fetchPage={(cursor) =>
+              getOrderHistory(historyOrder.id, { limit: 10, last_event_id: cursor })
+            }
+            emptyText="Событий по этому заказу пока нет"
+          />
+        ) : null}
+      </Modal>
     </>
   );
 }

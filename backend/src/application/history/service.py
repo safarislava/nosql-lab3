@@ -5,7 +5,7 @@ from application.event_bus import IEventBus
 from domain.history import OperationEvent, OperationType
 
 from .dto import (
-    OperationEventResponseDto,
+    EventsByTypeResponseDto,
     OrderHistoryResponseDto,
     ProductHistoryResponseDto,
     UserHistoryResponseDto,
@@ -57,16 +57,25 @@ class HistoryService:
         end_time: datetime | None = None,
         limit: int = 50,
         last_event_id: UUID | None = None,
-    ) -> list[OperationEventResponseDto]:
+    ) -> EventsByTypeResponseDto:
         """Получить события заданного типа за определенный период времени."""
+        op_type = (
+            event_type
+            if isinstance(event_type, OperationType)
+            else OperationType(event_type)
+        )
         events = self._history_repository.get_events_by_type(
-            event_type=event_type,
+            event_type=op_type,
             start_time=start_time,
             end_time=end_time,
             limit=limit,
             last_event_id=last_event_id,
         )
-        return [OperationEventResponseDto.from_domain(e) for e in events]
+        return EventsByTypeResponseDto.from_events(
+            event_type=op_type,
+            events=events,
+            limit=limit,
+        )
 
     def get_by_product_id(
         self,

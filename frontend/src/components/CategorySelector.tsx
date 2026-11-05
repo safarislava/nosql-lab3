@@ -63,10 +63,18 @@ export function CategorySelector({
     const timeout = setTimeout(() => {
       searchCategories(searchQuery)
         .then((cats) => {
-          if (!cancelled) setSearchResults(cats);
+          if (!cancelled) {
+            if (cats.length === 0 && !searchQuery.trim()) {
+              setSearchResults(CATEGORY_PRESETS);
+            } else {
+              setSearchResults(cats);
+            }
+          }
         })
         .catch(() => {
-          if (!cancelled) setSearchResults([]);
+          if (!cancelled) {
+            setSearchResults(CATEGORY_PRESETS);
+          }
         })
         .finally(() => {
           if (!cancelled) setSearching(false);

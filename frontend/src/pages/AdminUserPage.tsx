@@ -10,7 +10,9 @@ import {
 } from "../api/admin";
 import { getUserByEmail } from "../api/auth";
 import { ApiError } from "../api/client";
+import { getUserHistory } from "../api/history";
 import type { Cart, Favourites, Order, User } from "../api/types";
+import { HistoryFeed } from "../components/HistoryFeed";
 import { formatPrice, ORDER_STATUS_LABEL, roleLabel } from "../lib/format";
 
 export function AdminUserPage() {
@@ -162,7 +164,7 @@ export function AdminUserPage() {
             ))}
           </div>
           <h2>Заявки</h2>
-          <div className="list">
+          <div className="list" style={{ marginBottom: 24 }}>
             {orders.map((order) => (
               <article key={order.id} className="card row">
                 <div className="row__main">
@@ -174,6 +176,21 @@ export function AdminUserPage() {
                 </span>
               </article>
             ))}
+          </div>
+
+          <div style={{ marginTop: 24, borderTop: "1px solid var(--line)", paddingTop: 20 }}>
+            <h2>История действий пользователя</h2>
+            <p className="muted" style={{ margin: "6px 0 16px" }}>
+              Аудит операций пользователя в Cassandra
+            </p>
+            <HistoryFeed
+              key={user.id}
+              fetchPage={(cursor) =>
+                getUserHistory(user.id, { limit: 15, last_event_id: cursor })
+              }
+              showUserId={false}
+              emptyText="Событий для данного пользователя нет"
+            />
           </div>
         </>
       ) : null}
