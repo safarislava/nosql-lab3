@@ -237,3 +237,43 @@ class TestHistoryFunctional:
         assert data["order_id"] == str(order_id)
         assert "events" in data
         assert "next_cursor" in data
+
+    def test_admin_get_events_by_type_success(
+        self,
+        client: TestClient,
+        admin_auth_headers: dict[str, str],
+        student_auth_headers: dict[str, str],
+        repos: RepositoriesContainer,
+        admin_user: User,
+    ) -> None:
+        """Администратор получает события по типу, а студент получает 403."""
+        repos.history_repo.add_event(
+            OperationEvent(
+                user_id=admin_user.id,
+                action=OperationType.CREATE_PRODUCT,
+            )
+        )
+
+        # Студент -> 403
+        student_resp = client.get(
+            "/api/history",
+            headers=student_auth_headers,
+            params={"event_type": "CREATE_PRODUCT"},
+        )
+        assert student_resp.status_code == 403
+
+        # Неавторизованный -> 401
+        anon_resp = client.get("/api/history", params={"event_type": "CREATE_PRODUCT"})
+        assert anon_resp.status_code == 401
+
+        # Админ -> 200
+        admin_resp = client.get(
+            "/api/history",
+            headers=admin_auth_headers,
+            params={"event_type": "CREATE_PRODUCT", "limit": 10},
+        )
+        assert admin_resp.status_code == 200
+        data = admin_resp.json()
+        assert data["event_type"] == "CREATE_PRODUCT"
+        assert len(data["events"]) >= 1
+
