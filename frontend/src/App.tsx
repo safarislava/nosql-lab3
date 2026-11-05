@@ -3,6 +3,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import { ProtectedLayout } from "./components/ProtectedLayout";
 import { RoleLayout } from "./components/RoleGate";
 import { AdminAnalyticsPage } from "./pages/AdminAnalyticsPage";
+import { AdminAuditPage } from "./pages/AdminAuditPage";
 import { AdminOrdersPage } from "./pages/AdminOrdersPage";
 import { AdminProductsPage } from "./pages/AdminProductsPage";
 import { AdminUserPage } from "./pages/AdminUserPage";
@@ -60,6 +61,7 @@ function AppRoutes() {
             { path: "all-orders", element: <AdminOrdersPage /> },
             { path: "user", element: <AdminUserPage /> },
             { path: "analytics", element: <AdminAnalyticsPage /> },
+            { path: "audit", element: <AdminAuditPage /> },
           ],
         },
       ],

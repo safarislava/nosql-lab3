@@ -1,5 +1,7 @@
 import { api } from "./client";
 import type {
+  EventsByTypeResponse,
+  OperationType,
   OrderHistoryResponse,
   ProductHistoryResponse,
   UserHistoryResponse,
@@ -70,3 +72,26 @@ export function getOrderHistory(
     },
   );
 }
+
+export type EventsByTypeParams = HistoryQueryParams & {
+  event_type: OperationType;
+  start_time?: string | null;
+  end_time?: string | null;
+};
+
+export function getEventsByType(
+  params: EventsByTypeParams,
+): Promise<EventsByTypeResponse> {
+  const search = new URLSearchParams();
+  search.set("event_type", params.event_type);
+  if (params.start_time) search.set("start_time", params.start_time);
+  if (params.end_time) search.set("end_time", params.end_time);
+  if (params.limit) search.set("limit", String(params.limit));
+  if (params.last_event_id) search.set("last_event_id", params.last_event_id);
+  search.set("_t", String(Date.now()));
+  return api<EventsByTypeResponse>(`/api/history?${search.toString()}`, {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache" },
+  });
+}
+

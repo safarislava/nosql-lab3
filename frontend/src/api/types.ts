@@ -216,3 +216,8 @@ export type OrderHistoryResponse = CursorPage<OperationEvent> & {
   order_id: string;
 };
 
+export type EventsByTypeResponse = CursorPage<OperationEvent> & {
+  event_type: OperationType;
+};
+
+

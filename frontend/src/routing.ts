@@ -23,6 +23,7 @@ export function pathsFor(role: UserRole) {
     allOrders: `${base}/all-orders`,
     user: `${base}/user`,
     analytics: `${base}/analytics`,
+    audit: `${base}/audit`,
   };
 }
 
