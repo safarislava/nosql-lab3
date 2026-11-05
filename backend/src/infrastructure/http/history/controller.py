@@ -1,14 +1,17 @@
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
+from domain.history import OperationType
 from domain.user import UserRole
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 
 from .dependencies import HistoryServiceDep
 from .schemas import (
+    EventsByTypeResponse,
     OrderHistoryResponse,
     ProductHistoryResponse,
     UserHistoryResponse,
@@ -137,3 +140,41 @@ def get_order_history(
         last_event_id=last_event_id,
     )
     return OrderHistoryResponse.from_dto(dto)
+
+
+@router.get(
+    "/history",
+    dependencies=[require_roles(UserRole.ADMIN)],
+    response_model=EventsByTypeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Получить события заданного типа за период (Admin)",
+)
+def get_events_by_type(
+    event_type: Annotated[OperationType, Query(description="Тип события")],
+    service: HistoryServiceDep,
+    start_time: Annotated[
+        datetime | None,
+        Query(description="Начало периода (включительно)"),
+    ] = None,
+    end_time: Annotated[
+        datetime | None,
+        Query(description="Конец периода (включительно)"),
+    ] = None,
+    limit: Annotated[
+        int,
+        Query(ge=1, le=100, description="Количество событий на страницу (limit)"),
+    ] = 50,
+    last_event_id: Annotated[
+        UUID | None,
+        Query(description="Курсор последнего события (event_id)"),
+    ] = None,
+) -> EventsByTypeResponse:
+    dto = service.get_events_by_type(
+        event_type=event_type,
+        start_time=start_time,
+        end_time=end_time,
+        limit=limit,
+        last_event_id=last_event_id,
+    )
+    return EventsByTypeResponse.from_dto(dto)
+
