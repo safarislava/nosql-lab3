@@ -96,4 +96,3 @@ class EventsByTypeResponse(BaseModel):
             limit=dto.limit,
             next_cursor=dto.next_cursor,
         )
-

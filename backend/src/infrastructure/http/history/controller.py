@@ -177,4 +177,3 @@ def get_events_by_type(
         last_event_id=last_event_id,
     )
     return EventsByTypeResponse.from_dto(dto)
-

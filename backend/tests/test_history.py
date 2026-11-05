@@ -276,4 +276,3 @@ class TestHistoryFunctional:
         data = admin_resp.json()
         assert data["event_type"] == "CREATE_PRODUCT"
         assert len(data["events"]) >= 1
-

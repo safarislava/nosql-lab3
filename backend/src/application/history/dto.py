@@ -130,4 +130,3 @@ class EventsByTypeResponseDto:
             limit=limit,
             next_cursor=next_cursor,
         )
-
