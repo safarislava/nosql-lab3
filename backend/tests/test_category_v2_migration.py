@@ -86,6 +86,26 @@ class MockCouchDbClient:
         del self.dbs[db][doc_id]
         return True
 
+    def get_all_docs(
+        self,
+        db: str,
+        *,
+        include_docs: bool = False,
+        node: int = -1,
+    ) -> list[dict[str, Any]]:
+        self.ensure_database(db)
+        rows: list[dict[str, Any]] = []
+        for doc_id, doc in self.dbs[db].items():
+            row: dict[str, Any] = {
+                "id": doc_id,
+                "key": doc_id,
+                "value": {"rev": doc.get("_rev", "")},
+            }
+            if include_docs:
+                row["doc"] = dict(doc)
+            rows.append(row)
+        return rows
+
     def mutate_doc(
         self,
         db: str,
