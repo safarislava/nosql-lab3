@@ -1,8 +1,13 @@
 import { FormEvent, useState } from "react";
 import { getEventsByType } from "../api/history";
 import type { OperationType } from "../api/types";
+import { DateTimeInput } from "../components/DateTimeInput";
 import { HistoryFeed } from "../components/HistoryFeed";
-import { OPERATION_TYPE_LABEL } from "../lib/format";
+import {
+  formatRuDateTime,
+  OPERATION_TYPE_LABEL,
+  parseRuDateTime,
+} from "../lib/format";
 
 const ALL_OPERATION_TYPES: OperationType[] = [
   "CREATE_PRODUCT",
@@ -54,11 +59,37 @@ export function AdminAuditPage() {
     });
   }
 
-  function toIso(localDateTimeStr: string): string | undefined {
-    if (!localDateTimeStr) return undefined;
-    const d = new Date(localDateTimeStr);
-    return isNaN(d.getTime()) ? undefined : d.toISOString();
+  function toIso(ruDateTimeStr: string): string | undefined {
+    if (!ruDateTimeStr) return undefined;
+    const d = parseRuDateTime(ruDateTimeStr);
+    return d ? d.toISOString() : undefined;
   }
+
+  function setPreset(hours: number | null) {
+    if (hours === null) {
+      setStartTime("");
+      setEndTime("");
+      return;
+    }
+    const end = new Date();
+    const start = new Date(end.getTime() - hours * 3600_000);
+    setStartTime(formatRuDateTime(start));
+    setEndTime(formatRuDateTime(end));
+  }
+
+  function setPresetToday() {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    setStartTime(formatRuDateTime(start));
+    setEndTime(formatRuDateTime(end));
+  }
+
+  const parsedStart = parseRuDateTime(startTime);
+  const parsedEnd = parseRuDateTime(endTime);
+  const isInvalidRange = Boolean(
+    parsedStart && parsedEnd && parsedStart > parsedEnd,
+  );
 
   return (
     <>
@@ -71,55 +102,82 @@ export function AdminAuditPage() {
         </div>
       </div>
 
-      <form className="card filters" onSubmit={onApply} style={{ marginBottom: 20 }}>
-        <label className="field">
-          <span>Тип события</span>
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value as OperationType)}
-          >
-            {ALL_OPERATION_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {OPERATION_TYPE_LABEL[type] || type} ({type})
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="card" style={{ padding: "16px", marginBottom: 20 }}>
+        <form className="filters" onSubmit={onApply} style={{ padding: 0, margin: 0 }}>
+          <label className="field">
+            <span>Тип события</span>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value as OperationType)}
+            >
+              {ALL_OPERATION_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {OPERATION_TYPE_LABEL[type] || type} ({type})
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="field">
-          <span>Дата и время от</span>
-          <input
-            type="datetime-local"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-          />
-        </label>
+          <label className="field">
+            <span>Дата и время от</span>
+            <DateTimeInput
+              value={startTime}
+              onChange={setStartTime}
+              placeholder="05.11.2026 00:00"
+            />
+          </label>
 
-        <label className="field">
-          <span>Дата и время до</span>
-          <input
-            type="datetime-local"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
-        </label>
+          <label className="field">
+            <span>Дата и время до</span>
+            <DateTimeInput
+              value={endTime}
+              onChange={setEndTime}
+              placeholder="05.11.2026 23:59"
+            />
+          </label>
 
-        <label className="field">
-          <span>Лимит на страницу</span>
-          <select
-            value={limit}
-            onChange={(e) => setLimit(Number(e.target.value))}
-          >
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-        </label>
+          <label className="field">
+            <span>Лимит на страницу</span>
+            <select
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+            >
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </label>
 
-        <button className="btn btn--primary" type="submit">
-          Показать
-        </button>
-      </form>
+          <button className="btn btn--primary" type="submit" disabled={isInvalidRange}>
+            Показать
+          </button>
+        </form>
+
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid var(--border, #e2e8f0)" }}>
+          <span className="muted" style={{ fontSize: "12px" }}>Быстрый выбор периода:</span>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPreset(1)}>
+            Последний час
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={setPresetToday}>
+            Сегодня
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPreset(24)}>
+            24 часа
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPreset(24 * 7)}>
+            7 дней
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPreset(null)}>
+            Сбросить даты
+          </button>
+        </div>
+
+        {isInvalidRange ? (
+          <p className="error" style={{ margin: "8px 0 0", fontSize: "13px" }}>
+            Дата «от» не может быть позже даты «до»
+          </p>
+        ) : null}
+      </div>
 
       <div style={{ marginTop: 12 }}>
         <HistoryFeed

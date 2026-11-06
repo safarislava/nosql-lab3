@@ -39,22 +39,66 @@ export const OPERATION_TYPE_LABEL: Record<OperationType, string> = {
   REMOVE_STUDENT: "Удаление студента",
 };
 
-export function formatDateTime(isoString: string): string {
+export function formatDateTime(
+  isoString: string,
+  includeSeconds: boolean = false,
+): string {
   if (!isoString) return "";
   try {
-    const d = new Date(isoString);
+    // If the datetime string lacks a timezone indicator, treat as UTC
+    const normalized =
+      isoString.includes("T") &&
+      !isoString.endsWith("Z") &&
+      !/[+-]\d{2}(:\d{2})?$/.test(isoString)
+        ? `${isoString}Z`
+        : isoString;
+    const d = new Date(normalized);
     if (isNaN(d.getTime())) return isoString;
-    return d.toLocaleString("ru-RU", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    return formatRuDateTime(d, includeSeconds);
   } catch {
     return isoString;
   }
+}
+
+export function formatRuDateTime(d: Date, includeSeconds: boolean = false): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const day = pad(d.getDate());
+  const month = pad(d.getMonth() + 1);
+  const year = d.getFullYear();
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  if (includeSeconds) {
+    const seconds = pad(d.getSeconds());
+    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+  }
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
+
+export function formatRuDateOnly(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+}
+
+export function parseRuDateTime(str: string): Date | null {
+  if (!str) return null;
+  const m = str.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (!m) return null;
+  const day = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10);
+  const year = parseInt(m[3], 10);
+  const hour = m[4] !== undefined ? parseInt(m[4], 10) : 0;
+  const minute = m[5] !== undefined ? parseInt(m[5], 10) : 0;
+  const second = m[6] !== undefined ? parseInt(m[6], 10) : 0;
+
+  if (month < 1 || month > 12) return null;
+  if (hour < 0 || hour > 23) return null;
+  if (minute < 0 || minute > 59) return null;
+  if (second < 0 || second > 59) return null;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) return null;
+
+  return new Date(year, month - 1, day, hour, minute, second);
 }
 
 export function formatEventDetails(event: OperationEvent): string {

@@ -94,7 +94,10 @@ export function HistoryFeed({
                   <span className="history-badge">
                     {OPERATION_TYPE_LABEL[event.action] || event.action}
                   </span>
-                  <span className="history-time muted">
+                  <span
+                    className="history-time muted"
+                    title={formatDateTime(event.timestamp, true)}
+                  >
                     {formatDateTime(event.timestamp)}
                   </span>
                 </div>
