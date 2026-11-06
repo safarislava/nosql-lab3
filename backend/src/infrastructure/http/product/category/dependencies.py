@@ -1,10 +1,11 @@
 from functools import cache
 from typing import Annotated
 
-from fastapi import Depends
-
 from application.category.repository import ICategoryRepository
 from application.category.service import CategoryService
+from fastapi import Depends
+
+from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.persistence.composite.category_repository import (
     CompositeCategoryRepository,
 )
@@ -41,8 +42,12 @@ CategoryRepositoryDep = Annotated[ICategoryRepository, Depends(get_category_repo
 
 def get_category_service(
     category_repository: CategoryRepositoryDep,
+    event_bus: EventBusDep,
 ) -> CategoryService:
-    return CategoryService(category_repository=category_repository)
+    return CategoryService(
+        category_repository=category_repository,
+        event_bus=event_bus,
+    )
 
 
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
