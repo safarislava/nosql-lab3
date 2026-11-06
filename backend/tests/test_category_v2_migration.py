@@ -11,6 +11,7 @@ from application.product.dto import ProductFilterDto, ProductSortBy
 from domain.category import Category
 from domain.product import Product
 from infrastructure.environment.settings import settings
+from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.http.category.controller import search_categories
 from infrastructure.persistence.composite.category_repository import (
     CompositeCategoryRepository,
@@ -1068,7 +1069,10 @@ def test_category_search_v2_and_v1_restriction() -> None:
         migrator=migrator,
         client=mock_client,  # type: ignore[arg-type]
     )
-    service = CategoryService(category_repository=composite_repo)
+    service = CategoryService(
+        category_repository=composite_repo,
+        event_bus=InMemoryEventBus(),
+    )
 
     # Заполняем категории в v2
     cat1 = Category(name="Ноутбуки", slug="laptops", description="Все ноутбуки")

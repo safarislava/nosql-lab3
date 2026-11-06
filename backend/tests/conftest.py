@@ -372,6 +372,7 @@ def client(
         session_service=session_service,
         password_hasher=password_hasher,
         token_service=token_service,
+        event_bus=repos.event_bus,
     )
     product_service = ProductService(
         product_repository=repos.product_repo,
@@ -412,6 +413,7 @@ def client(
     recovery_service = RecoveryService(
         recovery_token_repository=repos.recovery_repo,
         user_service=user_service,
+        event_bus=repos.event_bus,
     )
 
     overrides = {
