@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { formatRuDateTime, parseRuDateTime } from "../lib/format";
+import { formatRuDateOnly, formatRuDateTime, parseRuDateTime } from "../lib/format";
 
 export interface DateTimeInputProps {
-  value: string; // "DD.MM.YYYY HH:mm"
+  value: string; // "DD.MM.YYYY" or "DD.MM.YYYY HH:mm"
   onChange: (value: string) => void;
+  mode?: "date" | "datetime";
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -27,9 +28,10 @@ const MONTH_NAMES = [
 
 const WEEK_DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-function formatMask(raw: string): string {
-  // Strip non-digits
-  const digits = raw.replace(/\D/g, "").slice(0, 12);
+function formatMask(raw: string, mode: "date" | "datetime"): string {
+  const isDateOnly = mode === "date";
+  const maxDigits = isDateOnly ? 8 : 12;
+  const digits = raw.replace(/\D/g, "").slice(0, maxDigits);
   let result = "";
   if (digits.length > 0) {
     result += digits.slice(0, 2);
@@ -40,23 +42,52 @@ function formatMask(raw: string): string {
   if (digits.length > 4) {
     result += "." + digits.slice(4, 8);
   }
-  if (digits.length > 8) {
-    result += " " + digits.slice(8, 10);
-  }
-  if (digits.length > 10) {
-    result += ":" + digits.slice(10, 12);
+  if (!isDateOnly) {
+    if (digits.length > 8) {
+      result += " " + digits.slice(8, 10);
+    }
+    if (digits.length > 10) {
+      result += ":" + digits.slice(10, 12);
+    }
   }
   return result;
+}
+
+export function CalendarIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ display: "block" }}
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
 }
 
 export function DateTimeInput({
   value,
   onChange,
-  placeholder = "ДД.ММ.ГГГГ ЧЧ:ММ",
+  mode = "datetime",
+  placeholder,
   disabled = false,
   className = "",
   id,
 }: DateTimeInputProps) {
+  const isDateOnly = mode === "date";
+  const defaultPlaceholder = isDateOnly ? "ДД.ММ.ГГГГ" : "ДД.ММ.ГГГГ ЧЧ:ММ";
+  const maxLength = isDateOnly ? 10 : 16;
+
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -114,7 +145,7 @@ export function DateTimeInput({
     }
 
     // Auto-mask
-    const masked = formatMask(nextVal);
+    const masked = formatMask(nextVal, mode);
     onChange(masked);
   }
 
@@ -133,15 +164,26 @@ export function DateTimeInput({
   function handleSelectDay(day: number) {
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
+    if (isDateOnly) {
+      const d = new Date(year, month, day);
+      onChange(formatRuDateOnly(d));
+      setIsOpen(false);
+      return;
+    }
     const h = parseInt(selectedHour, 10) || 0;
     const m = parseInt(selectedMinute, 10) || 0;
     const d = new Date(year, month, day, h, m);
     onChange(formatRuDateTime(d));
   }
 
-  function handleSetNow() {
+  function handleSetToday() {
     const now = new Date();
     setViewDate(now);
+    if (isDateOnly) {
+      onChange(formatRuDateOnly(now));
+      setIsOpen(false);
+      return;
+    }
     setSelectedHour(String(now.getHours()).padStart(2, "0"));
     setSelectedMinute(String(now.getMinutes()).padStart(2, "0"));
     onChange(formatRuDateTime(now));
@@ -199,7 +241,7 @@ export function DateTimeInput({
     );
   };
 
-  const isComplete = value.length === 16;
+  const isComplete = value.length === maxLength;
   const isInvalid = isComplete && !parsedDate;
 
   return (
@@ -222,14 +264,16 @@ export function DateTimeInput({
           type="text"
           value={value}
           onChange={handleInputChange}
-          placeholder={placeholder}
+          placeholder={placeholder || defaultPlaceholder}
           disabled={disabled}
-          maxLength={16}
+          maxLength={maxLength}
           style={{
             width: "100%",
             height: "44px",
             padding: "0 68px 0 12px",
-            border: isInvalid ? "1px solid var(--danger, #b91c1c)" : "1px solid var(--line, #e7e5e4)",
+            border: isInvalid
+              ? "1px solid var(--danger, #b91c1c)"
+              : "1px solid var(--line, #e7e5e4)",
             borderRadius: "10px",
             background: "#fff",
             color: "var(--ink, #1c1917)",
@@ -279,16 +323,16 @@ export function DateTimeInput({
               border: "none",
               cursor: "pointer",
               padding: "6px",
-              fontSize: "16px",
               lineHeight: 1,
               borderRadius: "6px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--accent, #0f766e)",
+              color: isOpen ? "var(--accent, #0f766e)" : "var(--muted, #78716c)",
+              transition: "color 0.15s ease",
             }}
           >
-            📅
+            <CalendarIcon size={18} />
           </button>
         </div>
       </div>
@@ -391,7 +435,11 @@ export function DateTimeInput({
                   type="button"
                   onClick={() => handleSelectDay(day)}
                   style={{
-                    background: selected ? "var(--accent, #0f766e)" : today ? "rgba(15, 118, 110, 0.1)" : "transparent",
+                    background: selected
+                      ? "var(--accent, #0f766e)"
+                      : today
+                        ? "rgba(15, 118, 110, 0.1)"
+                        : "transparent",
                     color: selected ? "#fff" : "var(--ink, #1c1917)",
                     border: today && !selected ? "1px solid var(--accent, #0f766e)" : "none",
                     borderRadius: "6px",
@@ -408,109 +456,113 @@ export function DateTimeInput({
             })}
           </div>
 
-          {/* Time picker section */}
-          <div
-            style={{
-              marginTop: "12px",
-              paddingTop: "10px",
-              borderTop: "1px solid var(--line, #e7e5e4)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span style={{ fontSize: "12px", color: "var(--muted, #78716c)" }}>
-              Время:
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <select
-                value={selectedHour}
-                onChange={(e) => handleTimeChange(e.target.value, selectedMinute)}
+          {/* Time picker section (only in datetime mode) */}
+          {!isDateOnly ? (
+            <>
+              <div
                 style={{
-                  height: "32px",
-                  padding: "0 6px",
-                  fontSize: "13px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--line, #e7e5e4)",
-                  background: "#fff",
+                  marginTop: "12px",
+                  paddingTop: "10px",
+                  borderTop: "1px solid var(--line, #e7e5e4)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                {Array.from({ length: 24 }).map((_, h) => {
-                  const val = String(h).padStart(2, "0");
-                  return (
-                    <option key={val} value={val}>
-                      {val}
-                    </option>
-                  );
-                })}
-              </select>
-              <span>:</span>
-              <select
-                value={selectedMinute}
-                onChange={(e) => handleTimeChange(selectedHour, e.target.value)}
-                style={{
-                  height: "32px",
-                  padding: "0 6px",
-                  fontSize: "13px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--line, #e7e5e4)",
-                  background: "#fff",
-                }}
-              >
-                {Array.from({ length: 60 }).map((_, m) => {
-                  const val = String(m).padStart(2, "0");
-                  return (
-                    <option key={val} value={val}>
-                      {val}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
+                <span style={{ fontSize: "12px", color: "var(--muted, #78716c)" }}>
+                  Время:
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  <select
+                    value={selectedHour}
+                    onChange={(e) => handleTimeChange(e.target.value, selectedMinute)}
+                    style={{
+                      height: "32px",
+                      padding: "0 6px",
+                      fontSize: "13px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--line, #e7e5e4)",
+                      background: "#fff",
+                    }}
+                  >
+                    {Array.from({ length: 24 }).map((_, h) => {
+                      const val = String(h).padStart(2, "0");
+                      return (
+                        <option key={val} value={val}>
+                          {val}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <span>:</span>
+                  <select
+                    value={selectedMinute}
+                    onChange={(e) => handleTimeChange(selectedHour, e.target.value)}
+                    style={{
+                      height: "32px",
+                      padding: "0 6px",
+                      fontSize: "13px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--line, #e7e5e4)",
+                      background: "#fff",
+                    }}
+                  >
+                    {Array.from({ length: 60 }).map((_, m) => {
+                      const val = String(m).padStart(2, "0");
+                      return (
+                        <option key={val} value={val}>
+                          {val}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
 
-          {/* Quick chips */}
-          <div
-            style={{
-              display: "flex",
-              gap: "4px",
-              marginTop: "8px",
-              flexWrap: "wrap",
-            }}
-          >
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={handleSetStartOfDay}
-              style={{ fontSize: "11px", padding: "2px 6px" }}
-            >
-              00:00
-            </button>
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={() => handleTimeChange("12", "00")}
-              style={{ fontSize: "11px", padding: "2px 6px" }}
-            >
-              12:00
-            </button>
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={handleSetEndOfDay}
-              style={{ fontSize: "11px", padding: "2px 6px" }}
-            >
-              23:59
-            </button>
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={handleSetNow}
-              style={{ fontSize: "11px", padding: "2px 6px" }}
-            >
-              Сейчас
-            </button>
-          </div>
+              {/* Quick time chips */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "4px",
+                  marginTop: "8px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={handleSetStartOfDay}
+                  style={{ fontSize: "11px", padding: "2px 6px" }}
+                >
+                  00:00
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => handleTimeChange("12", "00")}
+                  style={{ fontSize: "11px", padding: "2px 6px" }}
+                >
+                  12:00
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={handleSetEndOfDay}
+                  style={{ fontSize: "11px", padding: "2px 6px" }}
+                >
+                  23:59
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={handleSetToday}
+                  style={{ fontSize: "11px", padding: "2px 6px" }}
+                >
+                  Сейчас
+                </button>
+              </div>
+            </>
+          ) : null}
 
           {/* Action buttons */}
           <div
@@ -525,22 +577,32 @@ export function DateTimeInput({
             <button
               type="button"
               className="btn btn--ghost btn--sm"
-              onClick={() => {
-                onChange("");
-                setIsOpen(false);
-              }}
+              onClick={handleSetToday}
               style={{ fontSize: "12px" }}
             >
-              Сбросить
+              Сегодня
             </button>
-            <button
-              type="button"
-              className="btn btn--primary btn--sm"
-              onClick={() => setIsOpen(false)}
-              style={{ fontSize: "12px" }}
-            >
-              Готово
-            </button>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                onClick={() => {
+                  onChange("");
+                  setIsOpen(false);
+                }}
+                style={{ fontSize: "12px" }}
+              >
+                Сбросить
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary btn--sm"
+                onClick={() => setIsOpen(false)}
+                style={{ fontSize: "12px" }}
+              >
+                Готово
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
