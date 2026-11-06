@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from application.event_bus import IEventBus
-from application.product.service import ProductService
 from domain.history import OperationEvent, OperationType
 from domain.order import Order, OrderStatus, ProductSnapshot
+
+from application.event_bus import IEventBus
+from application.product.service import ProductService
 
 from .counter_repository import IOrderCounterRepository
 from .dto import (

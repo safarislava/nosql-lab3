@@ -1,11 +1,11 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, status
-
 from application.order.exceptions import OrderNotFoundException
 from domain.order import OrderStatus
 from domain.user import UserRole
+from fastapi import APIRouter, Query, status
+
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 

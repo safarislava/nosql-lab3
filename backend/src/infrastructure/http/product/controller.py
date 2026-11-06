@@ -3,10 +3,10 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, status
-
 from application.product.dto import ProductFilterDto, ProductSortBy
 from domain.user import UserRole
+from fastapi import APIRouter, Query, status
+
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.cart.dependencies import CartServiceDep
 from infrastructure.http.favourites.dependencies import FavouritesServiceDep
