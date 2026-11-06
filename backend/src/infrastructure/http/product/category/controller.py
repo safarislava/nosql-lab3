@@ -1,10 +1,11 @@
 from uuid import UUID
 
-from fastapi import APIRouter, status
-
 from application.category.dto import CategoryCreateDto, CategoryUpdateDto
 from domain.user import UserRole
+from fastapi import APIRouter, status
+
 from infrastructure.http.auth.dependencies import require_roles
+from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 from infrastructure.http.product.category.dependencies import CategoryServiceDep
 from infrastructure.http.product.category.schemas import (
     CategoryResponse,
@@ -47,6 +48,7 @@ def list_product_categories(
 def add_product_category(
     product_id: UUID,
     request: CreateCategoryRequest,
+    current_user: CurrentUserDep,
     service: CategoryServiceDep,
 ) -> CategoryResponse:
     dto = CategoryCreateDto(
@@ -54,7 +56,7 @@ def add_product_category(
         slug=request.slug,
         description=request.description,
     )
-    result = service.add_category(product_id, dto)
+    result = service.add_category(product_id, dto, user_id=current_user.id)
     return CategoryResponse(
         id=result.id,
         name=result.name,
@@ -74,6 +76,7 @@ def update_product_category(
     product_id: UUID,
     category_id: UUID,
     request: UpdateCategoryRequest,
+    current_user: CurrentUserDep,
     service: CategoryServiceDep,
 ) -> CategoryResponse:
     dto = CategoryUpdateDto(
@@ -81,7 +84,9 @@ def update_product_category(
         slug=request.slug,
         description=request.description,
     )
-    result = service.update_category(product_id, category_id, dto)
+    result = service.update_category(
+        product_id, category_id, dto, user_id=current_user.id
+    )
     return CategoryResponse(
         id=result.id,
         name=result.name,
@@ -99,6 +104,7 @@ def update_product_category(
 def delete_product_category(
     product_id: UUID,
     category_id: UUID,
+    current_user: CurrentUserDep,
     service: CategoryServiceDep,
 ) -> None:
-    service.remove_category(product_id, category_id)
+    service.remove_category(product_id, category_id, user_id=current_user.id)

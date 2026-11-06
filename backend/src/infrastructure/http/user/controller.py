@@ -1,10 +1,10 @@
 from typing import Annotated
 from uuid import UUID
 
+from domain.user import UserRole
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import EmailStr
 
-from domain.user import UserRole
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 from infrastructure.http.user.schemas import (
@@ -154,7 +154,7 @@ def delete_user_me(
     current_user: CurrentUserDep,
     service: UserServiceDep,
 ) -> None:
-    service.delete_user(current_user.id)
+    service.delete_user(current_user.id, actor_id=current_user.id)
 
 
 @router.delete(
@@ -165,6 +165,7 @@ def delete_user_me(
 )
 def delete_user(
     user_id: UUID,
+    current_user: CurrentUserDep,
     service: UserServiceDep,
 ) -> None:
-    service.delete_user(user_id)
+    service.delete_user(user_id, actor_id=current_user.id)
