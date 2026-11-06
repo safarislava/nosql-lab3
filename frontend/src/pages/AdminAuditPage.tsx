@@ -112,7 +112,7 @@ export function AdminAuditPage() {
             >
               {ALL_OPERATION_TYPES.map((type) => (
                 <option key={type} value={type}>
-                  {OPERATION_TYPE_LABEL[type] || type} ({type})
+                  {OPERATION_TYPE_LABEL[type] || type}
                 </option>
               ))}
             </select>
