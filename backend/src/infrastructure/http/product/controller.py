@@ -213,3 +213,37 @@ def restore_stock(
 ) -> ProductResponse:
     product_dto = service.restore_stock(current_user.id, product_id, request.amount)
     return ProductResponse.from_dto(product_dto)
+
+
+@router.post(
+    "/{product_id}/categories/{category_id}",
+    dependencies=[require_roles(UserRole.ADMIN)],
+    response_model=ProductResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Привязать категорию к товару",
+)
+def assign_category_to_product(
+    product_id: UUID,
+    category_id: UUID,
+    current_user: CurrentUserDep,
+    service: ProductServiceDep,
+) -> ProductResponse:
+    product_dto = service.add_category(product_id, category_id, current_user.id)
+    return ProductResponse.from_dto(product_dto)
+
+
+@router.delete(
+    "/{product_id}/categories/{category_id}/unlink",
+    dependencies=[require_roles(UserRole.ADMIN)],
+    response_model=ProductResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Отвязать категорию от товара",
+)
+def unlink_category_from_product(
+    product_id: UUID,
+    category_id: UUID,
+    current_user: CurrentUserDep,
+    service: ProductServiceDep,
+) -> ProductResponse:
+    product_dto = service.remove_category(product_id, category_id, current_user.id)
+    return ProductResponse.from_dto(product_dto)

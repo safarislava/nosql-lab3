@@ -5,6 +5,7 @@ from fastapi import Depends
 
 from application.recovery.repository import IRecoveryTokenRepository
 from application.recovery.service import RecoveryService
+from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.http.user.dependencies import UserServiceDep
 from infrastructure.persistence.riak.recovery_token_repository import (
     RiakRecoveryTokenRepository,
@@ -24,10 +25,12 @@ RecoveryTokenRepositoryDep = Annotated[
 def get_recovery_service(
     recovery_token_repository: RecoveryTokenRepositoryDep,
     user_service: UserServiceDep,
+    event_bus: EventBusDep,
 ) -> RecoveryService:
     return RecoveryService(
         recovery_token_repository=recovery_token_repository,
         user_service=user_service,
+        event_bus=event_bus,
     )
 
 

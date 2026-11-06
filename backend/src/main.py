@@ -19,6 +19,7 @@ from infrastructure.http.exception_handlers import setup_exception_handlers
 from infrastructure.http.favourites.controller import router as favourites_router
 from infrastructure.http.health.controller import router as health_router
 from infrastructure.http.history.controller import router as history_router
+from infrastructure.http.history.dependencies import get_history_service
 from infrastructure.http.middleware.authentication_middleware import (
     authentication_middleware,
 )
@@ -35,6 +36,7 @@ from infrastructure.http.product.dependencies import get_product_analytics_cache
 from infrastructure.http.recovery.controller import router as recovery_router
 from infrastructure.http.teacher.controller import router as teacher_router
 from infrastructure.http.user.controller import router as user_router
+from infrastructure.persistence.cassandra.connection import close_cassandra_session
 from infrastructure.persistence.couchdb.category_migrator import (
     CategoryMigrator,
 )
@@ -93,12 +95,14 @@ def _run_couchdb_init_and_migration() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
     init_db()
+    get_history_service()
     get_product_analytics_cache()
     asyncio.create_task(asyncio.to_thread(_run_couchdb_init_and_migration))
     yield
     close_postgres_pool()
     close_riak_client()
     close_couchdb_client()
+    close_cassandra_session()
 
 
 class App(FastAPI):

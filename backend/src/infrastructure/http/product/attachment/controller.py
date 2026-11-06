@@ -5,6 +5,7 @@ from fastapi import APIRouter, status
 from application.attachment.dto import AttachmentCreateDto, AttachmentUpdateDto
 from domain.user import UserRole
 from infrastructure.http.auth.dependencies import require_roles
+from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 from infrastructure.http.product.attachment.dependencies import AttachmentServiceDep
 from infrastructure.http.product.attachment.schemas import (
     AttachmentResponse,
@@ -51,6 +52,7 @@ def list_product_attachments(
 def add_product_attachment(
     product_id: UUID,
     request: CreateAttachmentRequest,
+    current_user: CurrentUserDep,
     service: AttachmentServiceDep,
 ) -> AttachmentResponse:
     dto = AttachmentCreateDto(
@@ -61,7 +63,7 @@ def add_product_attachment(
         checksum=request.checksum,
         description=request.description,
     )
-    result = service.create(product_id, dto)
+    result = service.create(product_id, dto, user_id=current_user.id)
     return AttachmentResponse(
         id=result.id,
         filename=result.filename,
@@ -85,6 +87,7 @@ def update_product_attachment(
     product_id: UUID,
     attachment_id: UUID,
     request: UpdateAttachmentRequest,
+    current_user: CurrentUserDep,
     service: AttachmentServiceDep,
 ) -> AttachmentResponse:
     dto = AttachmentUpdateDto(
@@ -95,7 +98,7 @@ def update_product_attachment(
         checksum=request.checksum,
         description=request.description,
     )
-    result = service.update(product_id, attachment_id, dto)
+    result = service.update(product_id, attachment_id, dto, user_id=current_user.id)
     return AttachmentResponse(
         id=result.id,
         filename=result.filename,
@@ -117,6 +120,7 @@ def update_product_attachment(
 def delete_product_attachment(
     product_id: UUID,
     attachment_id: UUID,
+    current_user: CurrentUserDep,
     service: AttachmentServiceDep,
 ) -> None:
-    service.delete(product_id, attachment_id)
+    service.delete(product_id, attachment_id, user_id=current_user.id)

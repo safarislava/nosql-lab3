@@ -11,6 +11,7 @@ from application.product.dto import ProductFilterDto, ProductSortBy
 from domain.category import Category
 from domain.product import Product
 from infrastructure.environment.settings import settings
+from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.http.category.controller import search_categories
 from infrastructure.persistence.composite.category_repository import (
     CompositeCategoryRepository,
@@ -84,6 +85,26 @@ class MockCouchDbClient:
             return False
         del self.dbs[db][doc_id]
         return True
+
+    def get_all_docs(
+        self,
+        db: str,
+        *,
+        include_docs: bool = False,
+        node: int = -1,
+    ) -> list[dict[str, Any]]:
+        self.ensure_database(db)
+        rows: list[dict[str, Any]] = []
+        for doc_id, doc in self.dbs[db].items():
+            row: dict[str, Any] = {
+                "id": doc_id,
+                "key": doc_id,
+                "value": {"rev": doc.get("_rev", "")},
+            }
+            if include_docs:
+                row["doc"] = dict(doc)
+            rows.append(row)
+        return rows
 
     def mutate_doc(
         self,
@@ -1068,7 +1089,10 @@ def test_category_search_v2_and_v1_restriction() -> None:
         migrator=migrator,
         client=mock_client,  # type: ignore[arg-type]
     )
-    service = CategoryService(category_repository=composite_repo)
+    service = CategoryService(
+        category_repository=composite_repo,
+        event_bus=InMemoryEventBus(),
+    )
 
     # Заполняем категории в v2
     cat1 = Category(name="Ноутбуки", slug="laptops", description="Все ноутбуки")

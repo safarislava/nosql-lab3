@@ -5,6 +5,7 @@ from fastapi import Depends
 
 from application.attachment.repository import IAttachmentRepository
 from application.attachment.service import AttachmentService
+from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.persistence.couchdb.attachment_repository import (
     CouchDbAttachmentRepository,
 )
@@ -23,8 +24,12 @@ AttachmentRepositoryDep = Annotated[
 
 def get_attachment_service(
     attachment_repository: AttachmentRepositoryDep,
+    event_bus: EventBusDep,
 ) -> AttachmentService:
-    return AttachmentService(attachment_repository=attachment_repository)
+    return AttachmentService(
+        attachment_repository=attachment_repository,
+        event_bus=event_bus,
+    )
 
 
 AttachmentServiceDep = Annotated[AttachmentService, Depends(get_attachment_service)]

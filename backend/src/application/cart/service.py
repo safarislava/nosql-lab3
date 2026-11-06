@@ -102,8 +102,12 @@ class CartService:
         user_id: UUID,
         dto: UpdateCartProductDto,
     ) -> CartResponseDto:
+        cart = self._get_or_create(user_id)
+        is_new_item = not cart.has_product(dto.product_id)
+
         if dto.quantity <= 0:
             cart = self._cart_repository.remove_item_and_get(user_id, dto.product_id)
+            action = OperationType.REMOVE_CART_ITEM
         else:
             self._product_service.ensure_exists(dto.product_id)
             cart = self._cart_repository.set_item_quantity_and_get(
@@ -111,11 +115,16 @@ class CartService:
                 product_id=dto.product_id,
                 quantity=dto.quantity,
             )
+            action = (
+                OperationType.ADD_CART_ITEM
+                if is_new_item
+                else OperationType.UPDATE_CART_ITEM
+            )
 
         self._event_bus.publish(
             OperationEvent(
                 user_id=user_id,
-                action=OperationType.UPDATE_CART_ITEM,
+                action=action,
                 target_id=dto.product_id,
                 details={"new_quantity": dto.quantity},
             )

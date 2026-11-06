@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from application.event_bus import IEventBus
 from domain.attachment import AttachmentMetadata
+from domain.history import OperationEvent, OperationType
 
 from .dto import (
     AttachmentCreateDto,
@@ -19,11 +21,16 @@ from .repository import IAttachmentRepository
 
 
 class AttachmentService:
-    def __init__(self, attachment_repository: IAttachmentRepository) -> None:
+    def __init__(
+        self,
+        attachment_repository: IAttachmentRepository,
+        event_bus: IEventBus,
+    ) -> None:
         self._attachment_repository = attachment_repository
+        self._event_bus = event_bus
 
     def create(
-        self, product_id: UUID, dto: AttachmentCreateDto
+        self, product_id: UUID, dto: AttachmentCreateDto, user_id: UUID
     ) -> AttachmentResponseDto:
         if not dto.filename.strip():
             raise EmptyFilenameException()
@@ -39,6 +46,14 @@ class AttachmentService:
             description=dto.description.strip(),
         )
         saved = self._attachment_repository.add(product_id, attachment)
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user_id,
+                action=OperationType.UPLOAD_ATTACHMENT,
+                target_id=saved.id,
+                details={"product_id": str(product_id), "filename": saved.filename},
+            )
+        )
         return AttachmentResponseDto.from_domain(saved)
 
     def get_by_id(self, product_id: UUID, attachment_id: UUID) -> AttachmentResponseDto:
@@ -57,7 +72,11 @@ class AttachmentService:
         )
 
     def update(
-        self, product_id: UUID, attachment_id: UUID, dto: AttachmentUpdateDto
+        self,
+        product_id: UUID,
+        attachment_id: UUID,
+        dto: AttachmentUpdateDto,
+        user_id: UUID,
     ) -> AttachmentResponseDto:
         attachment = self._attachment_repository.get_by_id(product_id, attachment_id)
         if attachment is None:
@@ -103,9 +122,27 @@ class AttachmentService:
         saved = self._attachment_repository.update(product_id, updated)
         if saved is None:
             raise AttachmentNotFoundException(attachment_id)
+
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user_id,
+                action=OperationType.UPDATE_ATTACHMENT,
+                target_id=saved.id,
+                details={"product_id": str(product_id), "filename": saved.filename},
+            )
+        )
         return AttachmentResponseDto.from_domain(saved)
 
-    def delete(self, product_id: UUID, attachment_id: UUID) -> bool:
+    def delete(self, product_id: UUID, attachment_id: UUID, user_id: UUID) -> bool:
         if not self._attachment_repository.delete(product_id, attachment_id):
             raise AttachmentNotFoundException(attachment_id)
+
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user_id,
+                action=OperationType.DELETE_ATTACHMENT,
+                target_id=attachment_id,
+                details={"product_id": str(product_id)},
+            )
+        )
         return True

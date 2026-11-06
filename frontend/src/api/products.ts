@@ -221,6 +221,24 @@ export function restoreStock(productId: string, amount: number): Promise<Product
   });
 }
 
+export function assignProductCategory(
+  productId: string,
+  categoryId: string,
+): Promise<Product> {
+  return api<Product>(`/api/products/${productId}/categories/${categoryId}`, {
+    method: "POST",
+  });
+}
+
+export function unlinkProductCategory(
+  productId: string,
+  categoryId: string,
+): Promise<Product> {
+  return api<Product>(`/api/products/${productId}/categories/${categoryId}/unlink`, {
+    method: "DELETE",
+  });
+}
+
 export function getProductAnalytics(): Promise<ProductAnalytics> {
   return api<ProductAnalytics>("/api/products/analytics");
 }

@@ -10,7 +10,9 @@ import { addFavourite, removeFavourite, setCartQuantity } from "../api/shop";
 import type { Category, Product, ProductSortBy } from "../api/types";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { DateTimeInput } from "../components/DateTimeInput";
 import { ProductCard } from "../components/ProductCard";
+import { formatRuDateOnly, parseRuDateTime } from "../lib/format";
 import { usePaths } from "../routing";
 
 const SORT_OPTIONS: { value: ProductSortBy; label: string }[] = [
@@ -21,6 +23,23 @@ const SORT_OPTIONS: { value: ProductSortBy; label: string }[] = [
   { value: "name_asc", label: "По названию А–Я" },
   { value: "name_desc", label: "По названию Я–А" },
 ];
+
+function toRuDate(val: string): string {
+  if (!val) return "";
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(val)) return val;
+  const m = val.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? val : formatRuDateOnly(d);
+}
+
+function toApiDate(val: string): string {
+  if (!val) return "";
+  const d = parseRuDateTime(val);
+  if (!d) return val;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 export function CatalogPage() {
   const navigate = useNavigate();
@@ -47,8 +66,12 @@ export function CatalogPage() {
   const [draftQuery, setDraftQuery] = useState(filters.query);
   const [draftMin, setDraftMin] = useState(filters.min_price);
   const [draftMax, setDraftMax] = useState(filters.max_price);
-  const [draftCreatedFrom, setDraftCreatedFrom] = useState(filters.created_from);
-  const [draftCreatedTo, setDraftCreatedTo] = useState(filters.created_to);
+  const [draftCreatedFrom, setDraftCreatedFrom] = useState(() =>
+    toRuDate(filters.created_from),
+  );
+  const [draftCreatedTo, setDraftCreatedTo] = useState(() =>
+    toRuDate(filters.created_to),
+  );
   const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -60,8 +83,8 @@ export function CatalogPage() {
     setDraftQuery(filters.query);
     setDraftMin(filters.min_price);
     setDraftMax(filters.max_price);
-    setDraftCreatedFrom(filters.created_from);
-    setDraftCreatedTo(filters.created_to);
+    setDraftCreatedFrom(toRuDate(filters.created_from));
+    setDraftCreatedTo(toRuDate(filters.created_to));
   }, [filters]);
 
   useEffect(() => {
@@ -160,8 +183,10 @@ export function CatalogPage() {
     if (draftQuery.trim()) next.set("query", draftQuery.trim());
     if (draftMin) next.set("min_price", draftMin);
     if (draftMax) next.set("max_price", draftMax);
-    if (draftCreatedFrom) next.set("created_from", draftCreatedFrom);
-    if (draftCreatedTo) next.set("created_to", draftCreatedTo);
+    const apiCreatedFrom = toApiDate(draftCreatedFrom);
+    const apiCreatedTo = toApiDate(draftCreatedTo);
+    if (apiCreatedFrom) next.set("created_from", apiCreatedFrom);
+    if (apiCreatedTo) next.set("created_to", apiCreatedTo);
     if (filters.in_stock_only) next.set("in_stock_only", "true");
     next.set("sort_by", filters.sort_by);
     for (const cid of filters.category_ids) {
@@ -261,18 +286,20 @@ export function CatalogPage() {
         </label>
         <label className="field">
           <span>Создан с</span>
-          <input
-            type="date"
+          <DateTimeInput
+            mode="date"
             value={draftCreatedFrom}
-            onChange={(event) => setDraftCreatedFrom(event.target.value)}
+            onChange={setDraftCreatedFrom}
+            placeholder="ДД.ММ.ГГГГ"
           />
         </label>
         <label className="field">
           <span>Создан по</span>
-          <input
-            type="date"
+          <DateTimeInput
+            mode="date"
             value={draftCreatedTo}
-            onChange={(event) => setDraftCreatedTo(event.target.value)}
+            onChange={setDraftCreatedTo}
+            placeholder="ДД.ММ.ГГГГ"
           />
         </label>
         <label className="field">

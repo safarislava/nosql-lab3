@@ -9,6 +9,7 @@ from application.session.repository import ISessionRepository
 from application.session.service import SessionService
 from domain.user import UserRole
 from infrastructure.environment.settings import settings
+from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.http.middleware.authentication_middleware import (
     AuthUser,
     CurrentUserDep,
@@ -57,12 +58,14 @@ def get_auth_service(
     session_service: SessionServiceDep,
     password_hasher: PasswordHasherDep,
     token_service: TokenServiceDep,
+    event_bus: EventBusDep,
 ) -> AuthService:
     return AuthService(
         user_service=user_service,
         session_service=session_service,
         password_hasher=password_hasher,
         token_service=token_service,
+        event_bus=event_bus,
     )
 
 

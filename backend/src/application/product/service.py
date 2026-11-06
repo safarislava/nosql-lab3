@@ -191,7 +191,9 @@ class ProductService:
             saved_product, categories=cats, attachments=atts
         )
 
-    def add_category(self, product_id: UUID, category_id: UUID) -> ProductResponseDto:
+    def add_category(
+        self, product_id: UUID, category_id: UUID, user_id: UUID
+    ) -> ProductResponseDto:
         product = self._product_repository.get_by_id(product_id)
         if product is None:
             raise ProductNotFoundException(product_id)
@@ -199,11 +201,19 @@ class ProductService:
         if category_id not in product.category_ids:
             product.category_ids.append(category_id)
             self._product_repository.update(product)
+            self._event_bus.publish(
+                OperationEvent(
+                    user_id=user_id,
+                    action=OperationType.ASSIGN_PRODUCT_CATEGORY,
+                    target_id=product_id,
+                    details={"category_id": str(category_id)},
+                )
+            )
 
         return ProductResponseDto.from_domain(product)
 
     def remove_category(
-        self, product_id: UUID, category_id: UUID
+        self, product_id: UUID, category_id: UUID, user_id: UUID
     ) -> ProductResponseDto:
         product = self._product_repository.get_by_id(product_id)
         if product is None:
@@ -212,6 +222,14 @@ class ProductService:
         if category_id in product.category_ids:
             product.category_ids.remove(category_id)
             self._product_repository.update(product)
+            self._event_bus.publish(
+                OperationEvent(
+                    user_id=user_id,
+                    action=OperationType.REMOVE_PRODUCT_CATEGORY,
+                    target_id=product_id,
+                    details={"category_id": str(category_id)},
+                )
+            )
 
         return ProductResponseDto.from_domain(product)
 
