@@ -4,10 +4,9 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
+from application.history.repository import IHistoryRepository
 from cassandra.cluster import Session
 from cassandra.util import datetime_from_uuid1
-
-from application.history.repository import IHistoryRepository
 from domain.history import OperationEvent, OperationType
 
 logger = logging.getLogger(__name__)
@@ -43,7 +42,6 @@ _ACTION_ENTITY_MAP: dict[OperationType, str] = {
     OperationType.REQUEST_PASSWORD_RESET: "USER",
     OperationType.DELETE_ACCOUNT: "USER",
     OperationType.ADMIN_DELETE_USER: "USER",
-    OperationType.CHANGE_USER_ROLE: "USER",
     OperationType.CREATE_CATEGORY: "CATEGORY",
     OperationType.UPDATE_CATEGORY: "CATEGORY",
     OperationType.DELETE_CATEGORY: "CATEGORY",
@@ -52,10 +50,6 @@ _ACTION_ENTITY_MAP: dict[OperationType, str] = {
     OperationType.UPLOAD_ATTACHMENT: "PRODUCT",
     OperationType.UPDATE_ATTACHMENT: "PRODUCT",
     OperationType.DELETE_ATTACHMENT: "PRODUCT",
-    OperationType.TEACHER_ADD_STUDENT_CART: "CART",
-    OperationType.TEACHER_CREATE_STUDENT_ORDER: "ORDER",
-    OperationType.COMPLETE_ORDER: "ORDER",
-    OperationType.PAY_ORDER: "ORDER",
 }
 
 
