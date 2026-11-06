@@ -28,6 +28,8 @@ export const OPERATION_TYPE_LABEL: Record<OperationType, string> = {
   CHECKOUT: "Оформление корзины",
   USER_REGISTER: "Регистрация",
   UPDATE_PROFILE: "Обновление профиля",
+  CHANGE_PASSWORD: "Смена пароля",
+  PASSWORD_RESET: "Сброс пароля",
   ADD_FAVOURITE: "Добавление в избранное",
   REMOVE_FAVOURITE: "Удаление из избранного",
   CLEAR_FAVOURITES: "Очистка избранного",
