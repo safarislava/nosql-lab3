@@ -210,6 +210,7 @@ export function AdminAuditPage() {
           }
           emptyText={`Событий типа «${OPERATION_TYPE_LABEL[activeQuery.eventType] || activeQuery.eventType}» за выбранный период не найдено`}
           showUserId={true}
+          mode="admin"
         />
       </div>
     </>

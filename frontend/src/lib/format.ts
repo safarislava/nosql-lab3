@@ -154,3 +154,180 @@ export function formatBytes(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i] || "Б"}`;
 }
+
+export type OperationTone = "success" | "danger" | "info" | "warning" | "neutral";
+
+export function getOperationTone(action: OperationType): OperationTone {
+  switch (action) {
+    case "CREATE_PRODUCT":
+    case "CREATE_ORDER":
+    case "APPROVE_ORDER":
+    case "CHECKOUT":
+    case "USER_REGISTER":
+    case "CREATE_CATEGORY":
+    case "UPLOAD_ATTACHMENT":
+    case "ADD_STUDENT":
+      return "success";
+
+    case "DELETE_PRODUCT":
+    case "CANCEL_ORDER":
+    case "REJECT_ORDER":
+    case "REMOVE_FAVOURITE":
+    case "CLEAR_FAVOURITES":
+    case "REMOVE_CART_ITEM":
+    case "CLEAR_CART":
+    case "REMOVE_STUDENT":
+    case "LOGIN_FAILED":
+    case "DELETE_ACCOUNT":
+    case "DELETE_CATEGORY":
+    case "DELETE_ATTACHMENT":
+    case "ADMIN_DELETE_USER":
+    case "REMOVE_PRODUCT_CATEGORY":
+      return "danger";
+
+    case "UPDATE_PRODUCT":
+    case "RESTORE_STOCK":
+    case "UPDATE_PROFILE":
+    case "CHANGE_PASSWORD":
+    case "PASSWORD_RESET":
+    case "UPDATE_CATEGORY":
+    case "UPDATE_ATTACHMENT":
+    case "ASSIGN_PRODUCT_CATEGORY":
+      return "info";
+
+    case "RESERVE_STOCK":
+    case "ADD_CART_ITEM":
+    case "UPDATE_CART_ITEM":
+    case "ADD_FAVOURITE":
+    case "REQUEST_PASSWORD_RESET":
+      return "warning";
+
+    case "USER_LOGIN":
+    case "USER_LOGOUT":
+    case "USER_LOGOUT_ALL":
+    default:
+      return "neutral";
+  }
+}
+
+export function getOperationEntity(action: OperationType): string {
+  if (action.includes("PRODUCT")) return "Товар";
+  if (action.includes("ORDER") || action === "CHECKOUT") return "Заказ";
+  if (action.includes("CART")) return "Корзина";
+  if (action.includes("FAVOURITE")) return "Избранное";
+  if (action.includes("CATEGORY")) return "Категория";
+  if (action.includes("ATTACHMENT")) return "Вложение";
+  if (action.includes("LOGIN") || action.includes("LOGOUT")) return "Сессия";
+  if (action.includes("PASSWORD")) return "Безопасность";
+  if (action.includes("STUDENT")) return "Студенты";
+  if (
+    action.includes("USER") ||
+    action.includes("ACCOUNT") ||
+    action.includes("PROFILE")
+  ) {
+    return "Пользователь";
+  }
+  return "Операция";
+}
+
+export const OPERATION_USER_LABEL: Record<OperationType, string> = {
+  CREATE_PRODUCT: "Товар создан",
+  UPDATE_PRODUCT: "Товар обновлен",
+  DELETE_PRODUCT: "Товар удален",
+  RESERVE_STOCK: "Резервирование на складе",
+  RESTORE_STOCK: "Пополнение склада",
+  CREATE_ORDER: "Заказ оформлен",
+  CANCEL_ORDER: "Заказ отменен",
+  APPROVE_ORDER: "Заказ подтвержден",
+  REJECT_ORDER: "Заказ отклонен",
+  CHECKOUT: "Корзина оформлена в заказ",
+  USER_REGISTER: "Регистрация аккаунта",
+  UPDATE_PROFILE: "Профиль обновлен",
+  CHANGE_PASSWORD: "Пароль изменен",
+  PASSWORD_RESET: "Пароль сброшен",
+  ADD_FAVOURITE: "Добавлено в избранное",
+  REMOVE_FAVOURITE: "Удалено из избранного",
+  CLEAR_FAVOURITES: "Избранное очищено",
+  ADD_CART_ITEM: "Товар добавлен в корзину",
+  REMOVE_CART_ITEM: "Товар удален из корзины",
+  UPDATE_CART_ITEM: "Количество в корзине изменено",
+  CLEAR_CART: "Корзина очищена",
+  ADD_STUDENT: "Студент прикреплен",
+  REMOVE_STUDENT: "Студент откреплен",
+  USER_LOGIN: "Вход в аккаунт",
+  LOGIN_FAILED: "Ошибка входа в аккаунт",
+  USER_LOGOUT: "Выход из аккаунта",
+  USER_LOGOUT_ALL: "Выход со всех устройств",
+  REQUEST_PASSWORD_RESET: "Запрос восстановления пароля",
+  DELETE_ACCOUNT: "Аккаунт удален",
+  CREATE_CATEGORY: "Категория добавлена",
+  UPDATE_CATEGORY: "Категория обновлена",
+  DELETE_CATEGORY: "Категория удалена",
+  ASSIGN_PRODUCT_CATEGORY: "Категория привязана к товару",
+  REMOVE_PRODUCT_CATEGORY: "Категория отвязана от товара",
+  UPLOAD_ATTACHMENT: "Файл прикреплен",
+  UPDATE_ATTACHMENT: "Файл обновлен",
+  DELETE_ATTACHMENT: "Файл удален",
+  ADMIN_DELETE_USER: "Пользователь удален администратором",
+};
+
+export const DETAIL_KEY_LABELS: Record<string, string> = {
+  name: "Название",
+  price: "Цена",
+  quantity: "Количество",
+  amount: "Количество",
+  remaining_quantity: "Остаток на складе",
+  restored_quantity: "Возвращено на склад",
+  total_amount: "Сумма",
+  orders_count: "Заказов",
+  items_count: "Позиций",
+  email: "Email",
+  role: "Роль",
+  filename: "Файл",
+  size_bytes: "Размер файла",
+  description: "Описание",
+  slug: "Слаг",
+  reason: "Причина",
+  ip_address: "IP адрес",
+  product_id: "ID товара",
+  category_id: "ID категории",
+  student_id: "ID студента",
+  target_user_id: "ID пользователя",
+};
+
+const TECHNICAL_KEYS = new Set([
+  "product_id",
+  "category_id",
+  "student_id",
+  "target_user_id",
+  "ip_address",
+]);
+
+export function isTechnicalDetailKey(key: string): boolean {
+  return TECHNICAL_KEYS.has(key);
+}
+
+export function formatDetailValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (key === "price" || key === "total_amount") {
+    return formatPrice(String(value));
+  }
+  if (key === "size_bytes" && typeof value === "number") {
+    return formatBytes(value);
+  }
+  if (key === "role" && typeof value === "string") {
+    return roleLabel(value as UserRole);
+  }
+  if (
+    key === "quantity" ||
+    key === "amount" ||
+    key === "remaining_quantity" ||
+    key === "restored_quantity"
+  ) {
+    return `${value} шт.`;
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
