@@ -204,12 +204,7 @@ export type OperationType =
   | "UPLOAD_ATTACHMENT"
   | "UPDATE_ATTACHMENT"
   | "DELETE_ATTACHMENT"
-  | "ADMIN_DELETE_USER"
-  | "CHANGE_USER_ROLE"
-  | "TEACHER_ADD_STUDENT_CART"
-  | "TEACHER_CREATE_STUDENT_ORDER"
-  | "COMPLETE_ORDER"
-  | "PAY_ORDER";
+  | "ADMIN_DELETE_USER";
 
 export type OperationEvent = {
   id: string;

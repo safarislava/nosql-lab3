@@ -54,11 +54,6 @@ export const OPERATION_TYPE_LABEL: Record<OperationType, string> = {
   UPDATE_ATTACHMENT: "Обновление вложения",
   DELETE_ATTACHMENT: "Удаление вложения",
   ADMIN_DELETE_USER: "Удаление пользователя (админ)",
-  CHANGE_USER_ROLE: "Изменение роли",
-  TEACHER_ADD_STUDENT_CART: "Добавление товара студенту",
-  TEACHER_CREATE_STUDENT_ORDER: "Оформление заказа за студента",
-  COMPLETE_ORDER: "Завершение заказа",
-  PAY_ORDER: "Оплата заказа",
 };
 
 export function formatDateTime(
