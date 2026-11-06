@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from application.event_bus import IEventBus
 from domain.history import OperationEvent, OperationType
 from domain.user import User
+
+from application.event_bus import IEventBus
 
 from .dto import (
     ChangePasswordDto,
@@ -149,7 +150,20 @@ class UserService:
             )
         )
 
-    def delete_user(self, user_id: UUID) -> bool:
+    def delete_user(self, user_id: UUID, actor_id: UUID) -> bool:
         if not self._user_repository.delete(user_id):
             raise UserNotFoundException(user_id)
+
+        action = (
+            OperationType.DELETE_ACCOUNT
+            if actor_id == user_id
+            else OperationType.ADMIN_DELETE_USER
+        )
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=actor_id,
+                action=action,
+                target_id=user_id,
+            )
+        )
         return True

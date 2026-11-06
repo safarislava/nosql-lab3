@@ -1,8 +1,11 @@
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from application.user.service import UserService
+from domain.history import OperationEvent, OperationType
 from domain.recovery_token import RecoveryToken
+
+from application.event_bus import IEventBus
+from application.user.service import UserService
 
 from .dto import (
     CreateRecoveryDto,
@@ -21,9 +24,11 @@ class RecoveryService:
         self,
         recovery_token_repository: IRecoveryTokenRepository,
         user_service: UserService,
+        event_bus: IEventBus,
     ) -> None:
         self._recovery_token_repository = recovery_token_repository
         self._user_service = user_service
+        self._event_bus = event_bus
 
     def create_token(
         self, dto: CreateRecoveryDto, ttl_minutes: int = 15
@@ -40,6 +45,15 @@ class RecoveryService:
         )
 
         saved_token = self._recovery_token_repository.save(recovery_token)
+
+        self._event_bus.publish(
+            OperationEvent(
+                user_id=user.id,
+                action=OperationType.REQUEST_PASSWORD_RESET,
+                details={"email": user.email},
+            )
+        )
+
         return RecoveryResponseDto.from_domain(saved_token)
 
     def _generate_unique_token(self) -> str:
