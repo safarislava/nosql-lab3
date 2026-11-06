@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from application.attachment.dto import AttachmentCreateDto, AttachmentUpdateDto
-from domain.user import UserRole
 from fastapi import APIRouter, status
 
+from application.attachment.dto import AttachmentCreateDto, AttachmentUpdateDto
+from domain.user import UserRole
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 from infrastructure.http.product.attachment.dependencies import AttachmentServiceDep
@@ -98,9 +98,7 @@ def update_product_attachment(
         checksum=request.checksum,
         description=request.description,
     )
-    result = service.update(
-        product_id, attachment_id, dto, user_id=current_user.id
-    )
+    result = service.update(product_id, attachment_id, dto, user_id=current_user.id)
     return AttachmentResponse(
         id=result.id,
         filename=result.filename,

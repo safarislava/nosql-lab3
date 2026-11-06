@@ -4,9 +4,10 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from application.history.repository import IHistoryRepository
 from cassandra.cluster import Session
 from cassandra.util import datetime_from_uuid1
+
+from application.history.repository import IHistoryRepository
 from domain.history import OperationEvent, OperationType
 
 logger = logging.getLogger(__name__)

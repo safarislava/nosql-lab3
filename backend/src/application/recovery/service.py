@@ -1,11 +1,10 @@
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from domain.history import OperationEvent, OperationType
-from domain.recovery_token import RecoveryToken
-
 from application.event_bus import IEventBus
 from application.user.service import UserService
+from domain.history import OperationEvent, OperationType
+from domain.recovery_token import RecoveryToken
 
 from .dto import (
     CreateRecoveryDto,

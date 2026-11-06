@@ -1,10 +1,10 @@
 from functools import cache
 from typing import Annotated
 
-from application.recovery.repository import IRecoveryTokenRepository
-from application.recovery.service import RecoveryService
 from fastapi import Depends
 
+from application.recovery.repository import IRecoveryTokenRepository
+from application.recovery.service import RecoveryService
 from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.http.user.dependencies import UserServiceDep
 from infrastructure.persistence.riak.recovery_token_repository import (

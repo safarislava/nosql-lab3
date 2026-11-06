@@ -1,11 +1,10 @@
 from decimal import Decimal
 from uuid import UUID
 
-from domain.cart import Cart
-from domain.history import OperationEvent, OperationType
-
 from application.event_bus import IEventBus
 from application.product.service import ProductService
+from domain.cart import Cart
+from domain.history import OperationEvent, OperationType
 
 from .dto import (
     CartItemResponseDto,

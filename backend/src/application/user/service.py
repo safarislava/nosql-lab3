@@ -1,9 +1,8 @@
 from uuid import UUID
 
+from application.event_bus import IEventBus
 from domain.history import OperationEvent, OperationType
 from domain.user import User
-
-from application.event_bus import IEventBus
 
 from .dto import (
     ChangePasswordDto,

@@ -1,10 +1,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from domain.user import UserRole
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import EmailStr
 
+from domain.user import UserRole
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 from infrastructure.http.user.schemas import (

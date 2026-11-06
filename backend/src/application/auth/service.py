@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from domain.history import OperationEvent, OperationType
-
 from application.event_bus import IEventBus
 from application.session.service import SessionService
 from application.user.exceptions import (
@@ -10,6 +8,7 @@ from application.user.exceptions import (
 )
 from application.user.hasher import IPasswordHasher
 from application.user.service import UserService
+from domain.history import OperationEvent, OperationType
 
 from .dto import AuthResponseDto, LoginDto
 from .token import ITokenService

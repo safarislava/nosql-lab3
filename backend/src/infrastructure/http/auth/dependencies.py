@@ -1,13 +1,13 @@
 from functools import cache
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, status
+
 from application.auth.service import AuthService
 from application.auth.token import ITokenService
 from application.session.repository import ISessionRepository
 from application.session.service import SessionService
 from domain.user import UserRole
-from fastapi import Depends, HTTPException, status
-
 from infrastructure.environment.settings import settings
 from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.http.middleware.authentication_middleware import (

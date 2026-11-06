@@ -1,10 +1,10 @@
 from functools import cache
 from typing import Annotated
 
-from application.attachment.repository import IAttachmentRepository
-from application.attachment.service import AttachmentService
 from fastapi import Depends
 
+from application.attachment.repository import IAttachmentRepository
+from application.attachment.service import AttachmentService
 from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.persistence.couchdb.attachment_repository import (
     CouchDbAttachmentRepository,

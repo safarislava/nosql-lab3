@@ -3,13 +3,12 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from domain.history import OperationEvent, OperationType
-from domain.product import Product
-
 from application.attachment.dto import AttachmentResponseDto
 from application.category.dto import CategoryResponseDto
 from application.event_bus import IEventBus
 from application.product.analytics_cache import IProductAnalyticsCache
+from domain.history import OperationEvent, OperationType
+from domain.product import Product
 
 from .dto import (
     ProductCreateDto,

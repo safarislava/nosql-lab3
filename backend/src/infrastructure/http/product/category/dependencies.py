@@ -1,10 +1,10 @@
 from functools import cache
 from typing import Annotated
 
-from application.category.repository import ICategoryRepository
-from application.category.service import CategoryService
 from fastapi import Depends
 
+from application.category.repository import ICategoryRepository
+from application.category.service import CategoryService
 from infrastructure.event_bus.dependencies import EventBusDep
 from infrastructure.persistence.composite.category_repository import (
     CompositeCategoryRepository,

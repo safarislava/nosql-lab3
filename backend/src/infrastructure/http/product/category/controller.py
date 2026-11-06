@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from application.category.dto import CategoryCreateDto, CategoryUpdateDto
-from domain.user import UserRole
 from fastapi import APIRouter, status
 
+from application.category.dto import CategoryCreateDto, CategoryUpdateDto
+from domain.user import UserRole
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.middleware.authentication_middleware import CurrentUserDep
 from infrastructure.http.product.category.dependencies import CategoryServiceDep

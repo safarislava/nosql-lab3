@@ -1,16 +1,15 @@
 import logging
 from uuid import UUID
 
-from domain.history import OperationEvent, OperationType
-from domain.teacher import Teacher
-from domain.user import UserRole
-
 from application.event_bus import IEventBus
 from application.favourites.dto import AddFavouriteDto
 from application.favourites.service import FavouritesService
 from application.product.service import ProductService
 from application.user.dto import UserResponseDto
 from application.user.service import UserService
+from domain.history import OperationEvent, OperationType
+from domain.teacher import Teacher
+from domain.user import UserRole
 
 from .dto import (
     AddProductToStudentsDto,

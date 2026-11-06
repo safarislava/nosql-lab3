@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from application.event_bus import IEventBus
 from domain.attachment import AttachmentMetadata
 from domain.history import OperationEvent, OperationType
-
-from application.event_bus import IEventBus
 
 from .dto import (
     AttachmentCreateDto,
