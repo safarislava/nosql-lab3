@@ -1,0 +1,5 @@
+services:
+  couchdb1:
+    container_name: nosql_lab3-couchdb1
+  couchdb2:
+    container_name: nosql_lab3-couchdb2
