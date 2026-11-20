@@ -1,7 +1,7 @@
 level,operation,success_pct,mean_ms,p95_ms,errors
-ONE,read,100,1.529,2.118,
-ONE,write,100,1.731,2.182,
-QUORUM,read,100,3.05,3.464,
-QUORUM,write,100,5.708,6.093,
+ONE,read,100,2.184,3.227,
+ONE,write,100,1.551,2.091,
+QUORUM,read,100,3.38,4.073,
+QUORUM,write,100,6.751,7.862,
 ALL,read,0,,,{'Unavailable': 100}
 ALL,write,0,,,{'Unavailable': 100}

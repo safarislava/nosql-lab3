@@ -1,7 +1,7 @@
 level,operation,success_pct,mean_ms,p95_ms,errors
-ONE,read,100,1.55,2.174,
-ONE,write,100,2.767,4.529,
-QUORUM,read,100,3.029,3.436,
-QUORUM,write,100,5.344,6.231,
-ALL,read,100,3.59,5.024,
-ALL,write,100,6.198,6.288,
+ONE,read,100,1.409,2.404,
+ONE,write,100,2.117,3.05,
+QUORUM,read,100,2.968,3.59,
+QUORUM,write,100,6.376,8.273,
+ALL,read,100,3.04,3.497,
+ALL,write,100,6.105,7.139,
