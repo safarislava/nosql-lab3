@@ -46,5 +46,8 @@ export function checkoutUser(userId: string): Promise<CheckoutResult> {
 }
 
 export function getUserOrders(userId: string): Promise<OrderList> {
-  return api<OrderList>(`/api/users/${userId}/orders?limit=50`);
+  return api<OrderList>(`/api/users/${userId}/orders/search`, {
+    method: "POST",
+    body: JSON.stringify({ limit: 50, offset: 0 }),
+  });
 }

@@ -1,19 +1,20 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, status
 
 from application.category.exceptions import (
     CategorySearchNotSupportedInV1Exception,
 )
 from infrastructure.environment.settings import settings
 from infrastructure.http.category.dependencies import CategoryServiceDep
-from infrastructure.http.category.schemas import CategoryResponse
+from infrastructure.http.category.schemas import (
+    CategoryResponse,
+    CategorySearchRequest,
+)
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
-@router.get(
-    "",
+@router.post(
+    "/search",
     response_model=list[CategoryResponse],
     status_code=status.HTTP_200_OK,
     summary="Поиск категорий",
@@ -24,22 +25,14 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 )
 def search_categories(
     service: CategoryServiceDep,
-    query: Annotated[
-        str | None,
-        Query(description="Поисковый запрос по названию категории"),
-    ] = None,
-    offset: Annotated[
-        int,
-        Query(ge=0, description="Смещение (offset)"),
-    ] = 0,
-    limit: Annotated[
-        int,
-        Query(ge=1, le=100, description="Лимит на страницу"),
-    ] = 50,
+    request: CategorySearchRequest | None = None,
 ) -> list[CategoryResponse]:
     if settings.app_version < 2:
         raise CategorySearchNotSupportedInV1Exception()
-    result = service.search_categories(query=query, offset=offset, limit=limit)
+    search_req = request or CategorySearchRequest()
+    result = service.search_categories(
+        query=search_req.query, offset=search_req.offset, limit=search_req.limit
+    )
     return [
         CategoryResponse(
             id=c.id,

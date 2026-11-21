@@ -255,22 +255,25 @@ class TestHistoryFunctional:
         )
 
         # Студент -> 403
-        student_resp = client.get(
-            "/api/history",
+        student_resp = client.post(
+            "/api/history/search",
             headers=student_auth_headers,
-            params={"event_type": "CREATE_PRODUCT"},
+            json={"event_type": "CREATE_PRODUCT"},
         )
         assert student_resp.status_code == 403
 
         # Неавторизованный -> 401
-        anon_resp = client.get("/api/history", params={"event_type": "CREATE_PRODUCT"})
+        anon_resp = client.post(
+            "/api/history/search",
+            json={"event_type": "CREATE_PRODUCT"},
+        )
         assert anon_resp.status_code == 401
 
         # Админ -> 200
-        admin_resp = client.get(
-            "/api/history",
+        admin_resp = client.post(
+            "/api/history/search",
             headers=admin_auth_headers,
-            params={"event_type": "CREATE_PRODUCT", "limit": 10},
+            json={"event_type": "CREATE_PRODUCT", "limit": 10},
         )
         assert admin_resp.status_code == 200
         data = admin_resp.json()

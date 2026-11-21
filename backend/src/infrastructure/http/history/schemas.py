@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from application.history.dto import (
     EventsByTypeResponseDto,
@@ -96,3 +96,19 @@ class EventsByTypeResponse(BaseModel):
             limit=dto.limit,
             next_cursor=dto.next_cursor,
         )
+
+
+class EventsByTypeRequest(BaseModel):
+    event_type: OperationType = Field(..., description="Тип события")
+    start_time: datetime | None = Field(
+        default=None, description="Начало периода (включительно)"
+    )
+    end_time: datetime | None = Field(
+        default=None, description="Конец периода (включительно)"
+    )
+    limit: int = Field(
+        default=50, ge=1, le=100, description="Количество событий на страницу (limit)"
+    )
+    last_event_id: UUID | None = Field(
+        default=None, description="Курсор последнего события (event_id)"
+    )
