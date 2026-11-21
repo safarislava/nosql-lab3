@@ -13,6 +13,7 @@ from domain.product import Product
 from infrastructure.environment.settings import settings
 from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.http.category.controller import search_categories
+from infrastructure.http.category.schemas import CategorySearchRequest
 from infrastructure.persistence.composite.category_repository import (
     CompositeCategoryRepository,
 )
@@ -1130,7 +1131,10 @@ def test_category_search_v2_and_v1_restriction() -> None:
     assert paginated.total == 1
 
     # Вызов HTTP контроллера в v2
-    http_resp = search_categories(service=service, query="бук", offset=0, limit=10)
+    http_resp = search_categories(
+        service=service,
+        request=CategorySearchRequest(query="бук", offset=0, limit=10),
+    )
     assert len(http_resp) == 2
     assert {c.name for c in http_resp} == {"Ноутбуки", "Ультрабуки"}
 
@@ -1146,7 +1150,10 @@ def test_category_search_v2_and_v1_restriction() -> None:
         assert exc.status_code == 400
 
     try:
-        search_categories(service=service, query="ноут", offset=0, limit=10)
+        search_categories(
+            service=service,
+            request=CategorySearchRequest(query="ноут", offset=0, limit=10),
+        )
         assert False, (
             "Ожидалось исключение CategorySearchNotSupportedInV1Exception в HTTP контроллере для v1"
         )
