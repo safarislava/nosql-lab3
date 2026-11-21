@@ -1,11 +1,7 @@
-from datetime import datetime
-from decimal import Decimal
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, status
 
-from application.product.dto import ProductFilterDto, ProductSortBy
 from domain.user import UserRole
 from infrastructure.http.auth.dependencies import require_roles
 from infrastructure.http.cart.dependencies import CartServiceDep
@@ -17,6 +13,7 @@ from infrastructure.http.middleware.authentication_middleware import (
 from infrastructure.http.product.schemas import (
     CreateProductRequest,
     ProductAnalyticsResponse,
+    ProductFilterRequest,
     ProductListResponse,
     ProductResponse,
     StockOperationRequest,
@@ -28,67 +25,17 @@ from .dependencies import ProductServiceDep
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-@router.get(
-    "",
+@router.post(
+    "/search",
     response_model=ProductListResponse,
     status_code=status.HTTP_200_OK,
     summary="Получить каталог товаров с фильтрацией и пагинацией",
 )
 def list_products(
     service: ProductServiceDep,
-    query: Annotated[
-        str | None,
-        Query(description="Поисковый запрос по названию или описанию"),
-    ] = None,
-    min_price: Annotated[
-        Decimal | None,
-        Query(ge=0, description="Минимальная цена"),
-    ] = None,
-    max_price: Annotated[
-        Decimal | None,
-        Query(ge=0, description="Максимальная цена"),
-    ] = None,
-    in_stock_only: Annotated[
-        bool,
-        Query(description="Только товары в наличии"),
-    ] = False,
-    sort_by: Annotated[
-        ProductSortBy,
-        Query(description="Сортировка товаров"),
-    ] = ProductSortBy.POPULARITY,
-    category_ids: Annotated[
-        list[UUID] | None,
-        Query(description="Фильтр по категориям"),
-    ] = None,
-    created_from: Annotated[
-        datetime | None,
-        Query(description="Дата создания от, включительно"),
-    ] = None,
-    created_to: Annotated[
-        datetime | None,
-        Query(description="Дата создания до, включительно"),
-    ] = None,
-    offset: Annotated[
-        int,
-        Query(ge=0, description="Смещение (offset)"),
-    ] = 0,
-    limit: Annotated[
-        int,
-        Query(ge=1, le=100, description="Лимит на страницу"),
-    ] = 50,
+    request: ProductFilterRequest | None = None,
 ) -> ProductListResponse:
-    filter_dto = ProductFilterDto(
-        query=query,
-        min_price=min_price,
-        max_price=max_price,
-        in_stock_only=in_stock_only,
-        sort_by=sort_by,
-        category_ids=category_ids,
-        created_from=created_from,
-        created_to=created_to,
-        offset=offset,
-        limit=limit,
-    )
+    filter_dto = (request or ProductFilterRequest()).to_dto()
     result = service.list(filter_dto)
     return ProductListResponse.from_dto(result)
 
