@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -5,8 +6,10 @@ from pydantic import BaseModel, Field
 
 from application.product.dto import (
     ProductCreateDto,
+    ProductFilterDto,
     ProductListResponseDto,
     ProductResponseDto,
+    ProductSortBy,
     ProductStateChangesDto,
     ProductUpdateDto,
 )
@@ -84,6 +87,47 @@ class UpdateProductRequest(BaseModel):
 
 class StockOperationRequest(BaseModel):
     amount: int = Field(..., gt=0, examples=[1])
+
+
+class ProductFilterRequest(BaseModel):
+    query: str | None = Field(
+        default=None, description="Поисковый запрос по названию или описанию"
+    )
+    min_price: Decimal | None = Field(
+        default=None, ge=0, description="Минимальная цена"
+    )
+    max_price: Decimal | None = Field(
+        default=None, ge=0, description="Максимальная цена"
+    )
+    in_stock_only: bool = Field(default=False, description="Только товары в наличии")
+    sort_by: ProductSortBy = Field(
+        default=ProductSortBy.POPULARITY, description="Сортировка товаров"
+    )
+    category_ids: list[UUID] | None = Field(
+        default=None, description="Фильтр по категориям"
+    )
+    created_from: datetime | None = Field(
+        default=None, description="Дата создания от, включительно"
+    )
+    created_to: datetime | None = Field(
+        default=None, description="Дата создания до, включительно"
+    )
+    offset: int = Field(default=0, ge=0, description="Смещение (offset)")
+    limit: int = Field(default=50, ge=1, le=100, description="Лимит на страницу")
+
+    def to_dto(self) -> ProductFilterDto:
+        return ProductFilterDto(
+            query=self.query,
+            min_price=self.min_price,
+            max_price=self.max_price,
+            in_stock_only=self.in_stock_only,
+            sort_by=self.sort_by,
+            category_ids=self.category_ids,
+            created_from=self.created_from,
+            created_to=self.created_to,
+            offset=self.offset,
+            limit=self.limit,
+        )
 
 
 class ProductResponse(BaseModel):

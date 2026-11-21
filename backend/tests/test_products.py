@@ -77,7 +77,7 @@ class TestProductsFunctional:
         repos.product_repo.create(p3)
 
         # 1. Поиск по слову "Python"
-        resp = client.get("/api/products", params={"query": "Python"})
+        resp = client.post("/api/products/search", json={"query": "Python"})
         assert resp.status_code == 200
         items = resp.json()["items"]
         assert len(items) == 2
@@ -86,23 +86,23 @@ class TestProductsFunctional:
         assert "Алгоритмы" in names
 
         # 2. Фильтр по диапазону цен
-        resp_price = client.get(
-            "/api/products",
-            params={"min_price": "1500.00", "max_price": "3500.00"},
+        resp_price = client.post(
+            "/api/products/search",
+            json={"min_price": "1500.00", "max_price": "3500.00"},
         )
         assert resp_price.status_code == 200
         items_price = resp_price.json()["items"]
         assert len(items_price) == 2
 
         # 3. Фильтр in_stock_only
-        resp_stock = client.get("/api/products", params={"in_stock_only": True})
+        resp_stock = client.post("/api/products/search", json={"in_stock_only": True})
         assert resp_stock.status_code == 200
         items_stock = resp_stock.json()["items"]
         assert len(items_stock) == 2
         assert all(item["quantity"] > 0 for item in items_stock)
 
         # 4. Пагинация
-        resp_page = client.get("/api/products", params={"offset": 1, "limit": 1})
+        resp_page = client.post("/api/products/search", json={"offset": 1, "limit": 1})
         assert resp_page.status_code == 200
         assert len(resp_page.json()["items"]) == 1
 

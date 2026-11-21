@@ -1,0 +1,7 @@
+level,operation,success_pct,mean_ms,p95_ms,errors
+ONE,read,100,2.406,3.585,
+ONE,write,100,2.621,3.894,
+QUORUM,read,0,,,{'NoHostAvailable(Unavailable)': 100}
+QUORUM,write,0,,,{'NoHostAvailable(Unavailable)': 100}
+ALL,read,0,,,{'NoHostAvailable(Unavailable)': 100}
+ALL,write,0,,,{'NoHostAvailable(Unavailable)': 100}
