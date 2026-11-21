@@ -60,6 +60,14 @@ class OrderFilterParams(BaseModel):
         )
 
 
+class UserOrderFilterParams(BaseModel):
+    status: OrderStatus | None = Field(
+        default=None, description="Фильтр по статусу заказа"
+    )
+    offset: int = Field(default=0, ge=0, description="Смещение (offset)")
+    limit: int = Field(default=50, ge=1, le=100, description="Лимит на страницу")
+
+
 class OrderResponse(BaseModel):
     id: UUID
     user_id: UUID
