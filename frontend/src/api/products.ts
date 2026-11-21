@@ -54,23 +54,20 @@ export type ProductQuery = {
 };
 
 export function listProducts(params: ProductQuery): Promise<ProductList> {
-  const search = new URLSearchParams();
-  if (params.query) search.set("query", params.query);
-  if (params.min_price) search.set("min_price", params.min_price);
-  if (params.max_price) search.set("max_price", params.max_price);
-  if (params.in_stock_only) search.set("in_stock_only", "true");
-  search.set("sort_by", params.sort_by ?? "popularity");
-  search.set("offset", String(params.offset ?? 0));
-  search.set("limit", String(params.limit ?? PAGE_SIZE));
-  search.set("_t", String(Date.now()));
-  if (params.category_ids && params.category_ids.length > 0) {
-    for (const cid of params.category_ids) {
-      search.append("category_ids", cid);
-    }
-  }
-  if (params.created_from) search.set("created_from", params.created_from);
-  if (params.created_to) search.set("created_to", params.created_to);
-  return api<ProductList>(`/api/products?${search.toString()}`, {
+  return api<ProductList>("/api/products/search", {
+    method: "POST",
+    body: JSON.stringify({
+      query: params.query || null,
+      min_price: params.min_price || null,
+      max_price: params.max_price || null,
+      in_stock_only: params.in_stock_only ?? false,
+      sort_by: params.sort_by ?? "popularity",
+      category_ids: params.category_ids?.length ? params.category_ids : null,
+      created_from: params.created_from || null,
+      created_to: params.created_to || null,
+      offset: params.offset ?? 0,
+      limit: params.limit ?? PAGE_SIZE,
+    }),
     cache: "no-store",
     headers: { "Cache-Control": "no-cache" },
   });

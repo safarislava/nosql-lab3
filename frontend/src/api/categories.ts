@@ -21,25 +21,26 @@ export const CATEGORY_PRESETS: Category[] = [
 let cachedSchemaVersion: 1 | 2 | null = null;
 
 /**
- * Поиск глобальных категорий (эндпоинт бэкенда GET /api/categories, доступен только в v2).
+ * Поиск глобальных категорий (эндпоинт бэкенда POST /api/categories/search, доступен только в v2).
  */
 export async function searchCategories(
   query?: string,
   offset = 0,
   limit = 50,
 ): Promise<Category[]> {
-  const search = new URLSearchParams();
-  if (query && query.trim()) search.set("query", query.trim());
-  if (offset > 0) search.set("offset", String(offset));
-  if (limit !== 50) search.set("limit", String(limit));
-
-  const qs = search.toString();
-  return api<Category[]>(`/api/categories${qs ? `?${qs}` : ""}`);
+  return api<Category[]>("/api/categories/search", {
+    method: "POST",
+    body: JSON.stringify({
+      query: query && query.trim() ? query.trim() : null,
+      offset,
+      limit,
+    }),
+  });
 }
 
 /**
  * Автоопределение версии схемы бэкенда (v1 vs v2).
- * В v2 запрос GET /api/categories возвращает 200 OK.
+ * В v2 запрос POST /api/categories/search возвращает 200 OK.
  * В v1 возвращает 400 Bad Request ("Поиск категорий доступен только для схемы версии 2...").
  */
 export async function detectSchemaVersion(): Promise<1 | 2> {
