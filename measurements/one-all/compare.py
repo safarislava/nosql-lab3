@@ -17,7 +17,7 @@ from infrastructure.persistence.cassandra.connection import get_cassandra_sessio
 from infrastructure.persistence.cassandra.history_repository import CassandraHistoryRepository
 
 
-levels = sys.argv[1:] or ["ONE", "ALL"]
+levels = sys.argv[1:] or ["ONE", "QUORUM", "ALL"]
 session = get_cassandra_session()
 try:
     config = settings.cassandra

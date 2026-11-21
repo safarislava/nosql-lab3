@@ -1,3 +1,3 @@
 scenario,bucket,attempts,clients,success,errors,active_partitions,top_partition_writes,top_partition_pct,throughput_ops_s,mean_ms,p95_ms
-uniform,11323,10000,16,10000,,10,1000,10.0,4551.52,3.502,5.315
-hot,11324,10000,16,10000,,1,10000,100.0,5138.05,3.103,4.638
+uniform,11323,10000,16,10000,,10,1000,10.0,3320.99,4.781,9.755
+hot,11324,10000,16,10000,,1,10000,100.0,4110.86,3.881,8.112
