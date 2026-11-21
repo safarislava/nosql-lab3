@@ -543,120 +543,20 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
-  /api/products:
-    get:
+  /api/products/search:
+    post:
       tags:
       - Products
       summary: Получить каталог товаров с фильтрацией и пагинацией
-      operationId: list_products_api_products_get
-      parameters:
-      - name: query
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Поисковый запрос по названию или описанию
-          title: Query
-        description: Поисковый запрос по названию или описанию
-      - name: min_price
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: number
-            minimum: 0.0
-          - type: string
-          - type: 'null'
-          description: Минимальная цена
-          title: Min Price
-        description: Минимальная цена
-      - name: max_price
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: number
-            minimum: 0.0
-          - type: string
-          - type: 'null'
-          description: Максимальная цена
-          title: Max Price
-        description: Максимальная цена
-      - name: in_stock_only
-        in: query
-        required: false
-        schema:
-          type: boolean
-          description: Только товары в наличии
-          default: false
-          title: In Stock Only
-        description: Только товары в наличии
-      - name: sort_by
-        in: query
-        required: false
-        schema:
-          $ref: '#/components/schemas/ProductSortBy'
-          description: Сортировка товаров
-          default: popularity
-        description: Сортировка товаров
-      - name: category_ids
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: array
-            items:
-              type: string
-              format: uuid
-          - type: 'null'
-          description: Фильтр по категориям
-          title: Category Ids
-        description: Фильтр по категориям
-      - name: created_from
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          description: Дата создания от, включительно
-          title: Created From
-        description: Дата создания от, включительно
-      - name: created_to
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          description: Дата создания до, включительно
-          title: Created To
-        description: Дата создания до, включительно
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          description: Смещение (offset)
-          default: 0
-          title: Offset
-        description: Смещение (offset)
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 1
-          description: Лимит на страницу
-          default: 50
-          title: Limit
-        description: Лимит на страницу
+      operationId: list_products_api_products_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ProductFilterRequest'
+              - type: 'null'
+              title: Request
       responses:
         '200':
           description: Successful Response
@@ -670,30 +570,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    post:
+  /api/products/analytics:
+    get:
       tags:
       - Products
-      summary: Создать новый товар
-      operationId: create_product_api_products_post
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductRequest'
+      summary: Среднее количество изменений товара по состояниям наличия
+      operationId: get_product_analytics_api_products_analytics_get
       responses:
-        '201':
+        '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: '#/components/schemas/ProductAnalyticsResponse'
         '401':
           description: Пользователь не аутентифицирован.
           content:
@@ -711,19 +600,31 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
-  /api/products/analytics:
-    get:
+  /api/products:
+    post:
       tags:
       - Products
-      summary: Среднее количество изменений товара по состояниям наличия
-      operationId: get_product_analytics_api_products_analytics_get
+      summary: Создать новый товар
+      operationId: create_product_api_products_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+        required: true
       responses:
-        '200':
+        '201':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductAnalyticsResponse'
+                $ref: '#/components/schemas/ProductResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
         '401':
           description: Пользователь не аутентифицирован.
           content:
@@ -926,6 +827,210 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/StockOperationRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+        '403':
+          description: Недостаточно прав доступа для выполнения данной операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - ADMIN
+      description: '**Требуемые роли:** `ADMIN`'
+  /api/products/{product_id}/categories/{category_id}:
+    post:
+      tags:
+      - Products
+      summary: Привязать категорию к товару
+      operationId: assign_category_to_product_api_products__product_id__categories__category_id__post
+      parameters:
+      - name: product_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Product Id
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Category Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+        '403':
+          description: Недостаточно прав доступа для выполнения данной операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - ADMIN
+      description: '**Требуемые роли:** `ADMIN`'
+    patch:
+      tags:
+      - Product Categories
+      summary: Обновить категорию товара
+      operationId: update_product_category_api_products__product_id__categories__category_id__patch
+      parameters:
+      - name: product_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Product Id
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Category Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+        '403':
+          description: Недостаточно прав доступа для выполнения данной операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - ADMIN
+      description: '**Требуемые роли:** `ADMIN`'
+    delete:
+      tags:
+      - Product Categories
+      summary: Удалить категорию у товара
+      operationId: delete_product_category_api_products__product_id__categories__category_id__delete
+      parameters:
+      - name: product_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Product Id
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Category Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+        '403':
+          description: Недостаточно прав доступа для выполнения данной операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - ADMIN
+      description: '**Требуемые роли:** `ADMIN`'
+  /api/products/{product_id}/categories/{category_id}/unlink:
+    delete:
+      tags:
+      - Products
+      summary: Отвязать категорию от товара
+      operationId: unlink_category_from_product_api_products__product_id__categories__category_id__unlink_delete
+      parameters:
+      - name: product_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Product Id
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Category Id
       responses:
         '200':
           description: Successful Response
@@ -1219,159 +1324,32 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
-  /api/products/{product_id}/categories/{category_id}:
-    patch:
-      tags:
-      - Product Categories
-      summary: Обновить категорию товара
-      operationId: update_product_category_api_products__product_id__categories__category_id__patch
-      parameters:
-      - name: product_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          title: Product Id
-      - name: category_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          title: Category Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateCategoryRequest'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Пользователь не аутентифицирован.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorDetailResponse'
-        '403':
-          description: Недостаточно прав доступа для выполнения данной операции.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorDetailResponse'
-      security:
-      - BearerAuth: []
-      x-required-roles:
-      - ADMIN
-      description: '**Требуемые роли:** `ADMIN`'
-    delete:
-      tags:
-      - Product Categories
-      summary: Удалить категорию у товара
-      operationId: delete_product_category_api_products__product_id__categories__category_id__delete
-      parameters:
-      - name: product_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          title: Product Id
-      - name: category_id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          title: Category Id
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Пользователь не аутентифицирован.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorDetailResponse'
-        '403':
-          description: Недостаточно прав доступа для выполнения данной операции.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorDetailResponse'
-      security:
-      - BearerAuth: []
-      x-required-roles:
-      - ADMIN
-      description: '**Требуемые роли:** `ADMIN`'
-  /api/categories:
-    get:
+  /api/categories/search:
+    post:
       tags:
       - Categories
       summary: Поиск категорий
       description: Поиск категорий по названию. Доступно только для схемы версии 2.
         В версии 1 возвращает 400 Bad Request.
-      operationId: search_categories_api_categories_get
-      parameters:
-      - name: query
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          description: Поисковый запрос по названию категории
-          title: Query
-        description: Поисковый запрос по названию категории
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          description: Смещение (offset)
-          default: 0
-          title: Offset
-        description: Смещение (offset)
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 1
-          description: Лимит на страницу
-          default: 50
-          title: Limit
-        description: Лимит на страницу
+      operationId: search_categories_api_categories_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/CategorySearchRequest'
+              - type: 'null'
+              title: Request
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/CategoryResponse'
-                title: Response Search Categories Api Categories Get
+                type: array
+                title: Response Search Categories Api Categories Search Post
         '422':
           description: Validation Error
           content:
@@ -2326,64 +2304,18 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
-  /api/history:
-    get:
+  /api/history/search:
+    post:
       tags:
       - History
       summary: Получить события заданного типа за период (Admin)
-      operationId: get_events_by_type_api_history_get
-      parameters:
-      - name: event_type
-        in: query
+      operationId: get_events_by_type_api_history_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventsByTypeRequest'
         required: true
-        schema:
-          $ref: '#/components/schemas/OperationType'
-          description: Тип события
-        description: Тип события
-      - name: start_time
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          description: Начало периода (включительно)
-          title: Start Time
-        description: Начало периода (включительно)
-      - name: end_time
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          description: Конец периода (включительно)
-          title: End Time
-        description: Конец периода (включительно)
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 1
-          description: Количество событий на страницу (limit)
-          default: 50
-          title: Limit
-        description: Количество событий на страницу (limit)
-      - name: last_event_id
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          description: Курсор последнего события (event_id)
-          title: Last Event Id
-        description: Курсор последнего события (event_id)
       responses:
         '200':
           description: Successful Response
@@ -2922,44 +2854,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/users/me/orders:
-    get:
+  /api/users/me/orders/search:
+    post:
       tags:
       - Orders
       summary: Получить список заказов текущего пользователя
-      operationId: list_my_orders_api_users_me_orders_get
-      parameters:
-      - name: status
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/OrderStatus'
-          - type: 'null'
-          description: Фильтр по статусу заказа
-          title: Status
-        description: Фильтр по статусу заказа
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          description: Смещение (offset)
-          default: 0
-          title: Offset
-        description: Смещение (offset)
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 1
-          description: Лимит на страницу
-          default: 50
-          title: Limit
-        description: Лимит на страницу
+      operationId: list_my_orders_api_users_me_orders_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/UserOrderFilterParams'
+              - type: 'null'
+              title: Filters
       responses:
         '200':
           description: Successful Response
@@ -2984,47 +2892,12 @@ paths:
       x-required-roles:
       - AUTHENTICATED
       description: '**Требуемые роли:** Любой авторизованный пользователь'
+  /api/users/{user_id}/orders/search:
     post:
       tags:
       - Orders
-      summary: Создать новый заказ для текущего пользователя
-      operationId: create_order_me_api_users_me_orders_post
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateOrderRequest'
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Пользователь не аутентифицирован.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorDetailResponse'
-      security:
-      - BearerAuth: []
-      x-required-roles:
-      - AUTHENTICATED
-      description: '**Требуемые роли:** Любой авторизованный пользователь'
-  /api/users/{user_id}/orders:
-    get:
-      tags:
-      - Orders
       summary: Получить список заказов пользователя по ID (Admin)
-      operationId: list_orders_by_user_id_api_users__user_id__orders_get
+      operationId: list_orders_by_user_id_api_users__user_id__orders_search_post
       parameters:
       - name: user_id
         in: path
@@ -3033,37 +2906,14 @@ paths:
           type: string
           format: uuid
           title: User Id
-      - name: status
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/OrderStatus'
-          - type: 'null'
-          description: Фильтр по статусу заказа
-          title: Status
-        description: Фильтр по статусу заказа
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          description: Смещение (offset)
-          default: 0
-          title: Offset
-        description: Смещение (offset)
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 1
-          description: Лимит на страницу
-          default: 50
-          title: Limit
-        description: Лимит на страницу
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/UserOrderFilterParams'
+              - type: 'null'
+              title: Filters
       responses:
         '200':
           description: Successful Response
@@ -3094,6 +2944,43 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
+  /api/users/me/orders:
+    post:
+      tags:
+      - Orders
+      summary: Создать новый заказ для текущего пользователя
+      operationId: create_order_me_api_users_me_orders_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Пользователь не аутентифицирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetailResponse'
+      security:
+      - BearerAuth: []
+      x-required-roles:
+      - AUTHENTICATED
+      description: '**Требуемые роли:** Любой авторизованный пользователь'
+  /api/users/{user_id}/orders:
     post:
       tags:
       - Orders
@@ -3270,55 +3157,20 @@ paths:
       x-required-roles:
       - ADMIN
       description: '**Требуемые роли:** `ADMIN`'
-  /api/orders:
-    get:
+  /api/orders/search:
+    post:
       tags:
       - Orders
       summary: Получить список заказов
-      operationId: list_orders_api_orders_get
-      parameters:
-      - name: user_id
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          description: Фильтр по ID пользователя
-          title: User Id
-        description: Фильтр по ID пользователя
-      - name: status
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/OrderStatus'
-          - type: 'null'
-          description: Фильтр по статусу заказа
-          title: Status
-        description: Фильтр по статусу заказа
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          description: Смещение (offset)
-          default: 0
-          title: Offset
-        description: Смещение (offset)
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 1
-          description: Лимит на страницу
-          default: 50
-          title: Limit
-        description: Лимит на страницу
+      operationId: list_orders_api_orders_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/OrderFilterParams'
+              - type: 'null'
+              title: Filters
       responses:
         '200':
           description: Successful Response
@@ -3710,6 +3562,29 @@ components:
       - slug
       - description
       title: CategoryResponse
+    CategorySearchRequest:
+      properties:
+        query:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Query
+          description: Поисковый запрос по названию категории
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+          description: Смещение (offset)
+          default: 0
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+          description: Лимит на страницу
+          default: 50
+      type: object
+      title: CategorySearchRequest
     ChangePasswordRequest:
       properties:
         old_password:
@@ -3864,6 +3739,43 @@ components:
       - name
       - price
       title: CreateProductRequest
+    EventsByTypeRequest:
+      properties:
+        event_type:
+          $ref: '#/components/schemas/OperationType'
+          description: Тип события
+        start_time:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start Time
+          description: Начало периода (включительно)
+        end_time:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End Time
+          description: Конец периода (включительно)
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+          description: Количество событий на страницу (limit)
+          default: 50
+        last_event_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Last Event Id
+          description: Курсор последнего события (event_id)
+      type: object
+      required:
+      - event_type
+      title: EventsByTypeRequest
     EventsByTypeResponse:
       properties:
         event_type:
@@ -4034,7 +3946,51 @@ components:
       - PASSWORD_RESET
       - ADD_STUDENT
       - REMOVE_STUDENT
+      - USER_LOGIN
+      - LOGIN_FAILED
+      - USER_LOGOUT
+      - USER_LOGOUT_ALL
+      - REQUEST_PASSWORD_RESET
+      - DELETE_ACCOUNT
+      - CREATE_CATEGORY
+      - UPDATE_CATEGORY
+      - DELETE_CATEGORY
+      - ASSIGN_PRODUCT_CATEGORY
+      - REMOVE_PRODUCT_CATEGORY
+      - UPLOAD_ATTACHMENT
+      - UPDATE_ATTACHMENT
+      - DELETE_ATTACHMENT
+      - ADMIN_DELETE_USER
       title: OperationType
+    OrderFilterParams:
+      properties:
+        user_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: User Id
+          description: Фильтр по ID пользователя
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/OrderStatus'
+          - type: 'null'
+          description: Фильтр по статусу заказа
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+          description: Смещение (offset)
+          default: 0
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+          description: Лимит на страницу
+          default: 50
+      type: object
+      title: OrderFilterParams
     OrderHistoryResponse:
       properties:
         order_id:
@@ -4217,6 +4173,77 @@ components:
       required:
       - name
       title: ProductCategoryInput
+    ProductFilterRequest:
+      properties:
+        query:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Query
+          description: Поисковый запрос по названию или описанию
+        min_price:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+          - type: 'null'
+          title: Min Price
+          description: Минимальная цена
+        max_price:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+          - type: 'null'
+          title: Max Price
+          description: Максимальная цена
+        in_stock_only:
+          type: boolean
+          title: In Stock Only
+          description: Только товары в наличии
+          default: false
+        sort_by:
+          $ref: '#/components/schemas/ProductSortBy'
+          description: Сортировка товаров
+          default: popularity
+        category_ids:
+          anyOf:
+          - items:
+              type: string
+              format: uuid
+            type: array
+          - type: 'null'
+          title: Category Ids
+          description: Фильтр по категориям
+        created_from:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created From
+          description: Дата создания от, включительно
+        created_to:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created To
+          description: Дата создания до, включительно
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+          description: Смещение (offset)
+          default: 0
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+          description: Лимит на страницу
+          default: 50
+      type: object
+      title: ProductFilterRequest
     ProductHistoryResponse:
       properties:
         product_id:
@@ -4667,6 +4694,28 @@ components:
       - user_id
       - events
       title: UserHistoryResponse
+    UserOrderFilterParams:
+      properties:
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/OrderStatus'
+          - type: 'null'
+          description: Фильтр по статусу заказа
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+          description: Смещение (offset)
+          default: 0
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+          description: Лимит на страницу
+          default: 50
+      type: object
+      title: UserOrderFilterParams
     UserResponse:
       properties:
         id:
